@@ -3,6 +3,8 @@ defmodule XtbClient do
 
   require Logger
 
+  @interval 30 * 1000
+
   @moduledoc """
   Documentation for `XtbClient`.
   """
@@ -34,11 +36,29 @@ defmodule XtbClient do
     message = encode_command("login", login_args)
     WebSockex.cast(self(), {:send, {:text, message}})
 
+    ping_command = encode_command("ping")
+    ping_message = {:ping, {:text, ping_command}, @interval}
+    schedule_work(ping_message, 1)
+
     {:ok, state}
+  end
+
+  defp schedule_work(message, interval) do
+    Process.send_after(self(), message, interval)
   end
 
   def get_all_symbols(client) do
     message = encode_command("getAllSymbols")
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_margin_level(client) do
+    message = encode_command("getMarginLevel")
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_symbol(client, symbol_name) do
+    message = encode_command("getSymbol", %{"symbol" => symbol_name})
     WebSockex.send_frame(client, {:text, message})
   end
 
@@ -78,6 +98,13 @@ defmodule XtbClient do
     state
   end
 
+  defp handle_message(
+         %{"status" => true} = _message,
+         state
+       ) do
+    state
+  end
+
   defp handle_message(%{"status" => false} = message, state) do
     IO.inspect("Handle failed command response - Message: #{inspect(message)}")
     state
@@ -85,6 +112,12 @@ defmodule XtbClient do
 
   @impl WebSockex
   def handle_cast({:send, frame}, state) do
+    {:reply, frame, state}
+  end
+
+  @impl WebSockex
+  def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
+    schedule_work(message, interval)
     {:reply, frame, state}
   end
 end
