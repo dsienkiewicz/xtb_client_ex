@@ -1,4 +1,4 @@
-defmodule XtbClient.XtbStreamingClient do
+defmodule XtbClient.StreamingSocket do
   use WebSockex
 
   require Logger

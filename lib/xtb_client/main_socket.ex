@@ -1,4 +1,4 @@
-defmodule XtbClient do
+defmodule XtbClient.MainSocket do
   use WebSockex
 
   require Logger
