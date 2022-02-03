@@ -1,8 +1,9 @@
 defmodule XtbClient.MainSocketTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest XtbClient.MainSocket
 
   alias XtbClient.MainSocket
+  alias XtbClient.Messages.{ChartLast}
 
   setup_all do
     {
@@ -41,6 +42,31 @@ defmodule XtbClient.MainSocketTest do
     Process.sleep(5_000)
   end
 
+  test "get calendar", context do
+    {:ok, pid} = MainSocket.start_link(context)
+
+    MainSocket.get_calendar(pid)
+
+    Process.sleep(5_000)
+  end
+
+  test "get chart last", context do
+    {:ok, pid} = MainSocket.start_link(context)
+    :sys.trace(pid, true)
+
+    args = %{
+      period: :h1,
+      start: DateTime.utc_now() |> DateTime.add(-30 * 24 * 60 * 60),
+      symbol: "EURPLN"
+    }
+
+    query = ChartLast.Query.new(args)
+
+    MainSocket.get_chart_last(pid, query)
+
+    Process.sleep(5_000)
+  end
+
   test "get margin level", context do
     {:ok, pid} = MainSocket.start_link(context)
 
@@ -53,6 +79,14 @@ defmodule XtbClient.MainSocketTest do
     {:ok, pid} = MainSocket.start_link(context)
 
     MainSocket.get_symbol(pid, "EURPLN")
+
+    Process.sleep(5_000)
+  end
+
+  test "get server time", context do
+    {:ok, pid} = MainSocket.start_link(context)
+
+    MainSocket.get_server_time(pid)
 
     Process.sleep(5_000)
   end

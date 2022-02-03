@@ -1,6 +1,8 @@
 defmodule XtbClient.MainSocket do
   use WebSockex
 
+  alias XtbClient.Messages.{ChartLast}
+
   require Logger
 
   @interval 30 * 1000
@@ -52,6 +54,17 @@ defmodule XtbClient.MainSocket do
     WebSockex.send_frame(client, {:text, message})
   end
 
+  def get_calendar(client) do
+    message = encode_command("getCalendar")
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_chart_last(client, %ChartLast.Query{} = query) do
+    message = %{info: query}
+    message = encode_command("getChartLastRequest", message)
+    WebSockex.send_frame(client, {:text, message})
+  end
+
   def get_margin_level(client) do
     message = encode_command("getMarginLevel")
     WebSockex.send_frame(client, {:text, message})
@@ -59,6 +72,11 @@ defmodule XtbClient.MainSocket do
 
   def get_symbol(client, symbol_name) do
     message = encode_command("getSymbol", %{"symbol" => symbol_name})
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_server_time(client) do
+    message = encode_command("getServerTime")
     WebSockex.send_frame(client, {:text, message})
   end
 
