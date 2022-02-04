@@ -3,7 +3,7 @@ defmodule XtbClient.MainSocketTest do
   doctest XtbClient.MainSocket
 
   alias XtbClient.MainSocket
-  alias XtbClient.Messages.{ChartLast}
+  alias XtbClient.Messages.{ChartLast, ChartRange}
 
   setup_all do
     {
@@ -63,6 +63,33 @@ defmodule XtbClient.MainSocketTest do
     query = ChartLast.Query.new(args)
 
     MainSocket.get_chart_last(pid, query)
+
+    Process.sleep(5_000)
+  end
+
+  test "get chart range", context do
+    {:ok, pid} = MainSocket.start_link(context)
+    :sys.trace(pid, true)
+
+    args = %{
+      start: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
+      end: DateTime.utc_now(),
+      period: :h1,
+      symbol: "EURPLN"
+    }
+
+    query = ChartRange.Query.new(args)
+
+    MainSocket.get_chart_range(pid, query)
+
+    Process.sleep(5_000)
+  end
+
+  test "get commission definition", context do
+    {:ok, pid} = MainSocket.start_link(context)
+    :sys.trace(pid, true)
+
+    MainSocket.get_commission_def(pid, "EURPLN", 1)
 
     Process.sleep(5_000)
   end

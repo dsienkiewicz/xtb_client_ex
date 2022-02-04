@@ -1,7 +1,7 @@
 defmodule XtbClient.MainSocket do
   use WebSockex
 
-  alias XtbClient.Messages.{ChartLast}
+  alias XtbClient.Messages.{ChartLast, ChartRange, RateInfo}
 
   require Logger
 
@@ -65,6 +65,17 @@ defmodule XtbClient.MainSocket do
     WebSockex.send_frame(client, {:text, message})
   end
 
+  def get_chart_range(client, %ChartRange.Query{} = query) do
+    message = %{info: query}
+    message = encode_command("getChartRangeRequest", message)
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_commission_def(client, symbol, volume) do
+    message = encode_command("getCommissionDef", %{"symbol" => symbol, "volume" => volume})
+    WebSockex.send_frame(client, {:text, message})
+  end
+
   def get_margin_level(client) do
     message = encode_command("getMarginLevel")
     WebSockex.send_frame(client, {:text, message})
@@ -106,6 +117,34 @@ defmodule XtbClient.MainSocket do
          state
        ) do
     Map.put_new(state, :stream_session_id, stream_session_id)
+  end
+
+  defp handle_message(
+         %{"status" => true, "returnData" => %{"digits" => digits, "rateInfos" => rate_infos}} =
+           _message,
+         state
+       ) do
+    rate_infos_response =
+      rate_infos
+      |> Enum.map(&RateInfo.Result.new(&1, digits))
+
+    IO.inspect("Rate infos: #{inspect(rate_infos_response)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnDate" =>
+             %{
+               commission: _commission,
+               rateOfExchange: _rate_of_exchange
+             } = response
+         } = _message,
+         state
+       ) do
+    IO.inspect("Commission definition: #{inspect(response)}")
+    state
   end
 
   defp handle_message(
