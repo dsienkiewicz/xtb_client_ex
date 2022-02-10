@@ -1,6 +1,8 @@
 defmodule XtbClient.StreamingSocket do
   use WebSockex
 
+  alias XtbClient.{AccountType}
+
   require Logger
 
   @interval 30 * 1000
@@ -9,7 +11,10 @@ defmodule XtbClient.StreamingSocket do
   Documentation for `XtbClient`.
   """
 
-  def start_link(%{url: url} = state) do
+  def start_link(%{url: url, type: type} = state) do
+    account_type = AccountType.format_streaming(type)
+    url = "#{url}/#{account_type}"
+
     WebSockex.start_link(url, __MODULE__, state)
   end
 

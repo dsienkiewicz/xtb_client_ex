@@ -1,7 +1,20 @@
 defmodule XtbClient.MainSocket do
   use WebSockex
 
-  alias XtbClient.Messages.{ChartLast, ChartRange, RateInfo}
+  alias XtbClient.{AccountType}
+
+  alias XtbClient.Messages.{
+    BalanceInfo,
+    ChartLast,
+    ChartRange,
+    CommissionDefinition,
+    DateRange,
+    MarginTrade,
+    NewsInfo,
+    ProfitCalculation,
+    RateInfo,
+    UserInfo
+  }
 
   require Logger
 
@@ -12,19 +25,10 @@ defmodule XtbClient.MainSocket do
   """
 
   def start_link(%{url: url, type: type} = state) do
-    account_type = account_type(type)
+    account_type = AccountType.format_main(type)
     url = "#{url}/#{account_type}"
 
     WebSockex.start_link(url, __MODULE__, state)
-  end
-
-  defp account_type(type) do
-    case type do
-      :demo -> "demo"
-      :stream_demo -> "demoStream"
-      :real -> "real"
-      :real_stream -> "realStream"
-    end
   end
 
   @impl WebSockex
@@ -76,18 +80,43 @@ defmodule XtbClient.MainSocket do
     WebSockex.send_frame(client, {:text, message})
   end
 
+  def get_current_user_data(client) do
+    message = encode_command("getCurrentUserData")
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_ibs_history(client, from, to) do
+    message = encode_command("getIbsHistory", %{"start" => from, "end" => to})
+    WebSockex.send_frame(client, {:text, message})
+  end
+
   def get_margin_level(client) do
     message = encode_command("getMarginLevel")
     WebSockex.send_frame(client, {:text, message})
   end
 
-  def get_symbol(client, symbol_name) do
-    message = encode_command("getSymbol", %{"symbol" => symbol_name})
+  def get_margin_trade(client, symbol, volume) do
+    message = encode_command("getMarginTrade", %{"symbol" => symbol, "volume" => volume})
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_news(client, %DateRange{} = query) do
+    message = encode_command("getNews", query)
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_profit_calculation(client, %ProfitCalculation.Query{} = query) do
+    message = encode_command("getProfitCalculation", query)
     WebSockex.send_frame(client, {:text, message})
   end
 
   def get_server_time(client) do
     message = encode_command("getServerTime")
+    WebSockex.send_frame(client, {:text, message})
+  end
+
+  def get_symbol(client, symbol_name) do
+    message = encode_command("getSymbol", %{"symbol" => symbol_name})
     WebSockex.send_frame(client, {:text, message})
   end
 
@@ -126,7 +155,7 @@ defmodule XtbClient.MainSocket do
        ) do
     rate_infos_response =
       rate_infos
-      |> Enum.map(&RateInfo.Result.new(&1, digits))
+      |> Enum.map(&RateInfo.new(&1, digits))
 
     IO.inspect("Rate infos: #{inspect(rate_infos_response)}")
     state
@@ -135,15 +164,75 @@ defmodule XtbClient.MainSocket do
   defp handle_message(
          %{
            "status" => true,
-           "returnDate" =>
-             %{
-               commission: _commission,
-               rateOfExchange: _rate_of_exchange
-             } = response
+           "returnData" => %{"commission" => _, "rateOfExchange" => _} = response
          } = _message,
          state
        ) do
-    IO.inspect("Commission definition: #{inspect(response)}")
+    commission_def = CommissionDefinition.Result.new(response)
+    IO.inspect("Commission definition: #{inspect(commission_def)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => %{"companyUnit" => _, "currency" => _} = response
+         } = _message,
+         state
+       ) do
+    user_info = UserInfo.new(response)
+    IO.inspect("User info: #{inspect(user_info)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => %{"balance" => _, "credit" => _} = response
+         } = _message,
+         state
+       ) do
+    balance_info = BalanceInfo.new(response)
+    IO.inspect("Balance info: #{inspect(balance_info)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => %{"margin" => _} = response
+         } = _message,
+         state
+       ) do
+    margin_trade = MarginTrade.new(response)
+    IO.inspect("Margin trade: #{inspect(margin_trade)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => [%{"body" => _, "bodylen" => _} | _] = response
+         } = _message,
+         state
+       ) do
+    news_result =
+      response
+      |> Enum.map(&NewsInfo.new(&1))
+
+    IO.inspect("News result: #{inspect(news_result)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => %{"profit" => _} = response
+         } = _message,
+         state
+       ) do
+    profit_result = ProfitCalculation.new(response)
+    IO.inspect("Profit calculation: #{inspect(profit_result)}")
     state
   end
 

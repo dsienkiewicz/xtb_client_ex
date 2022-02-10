@@ -3,7 +3,7 @@ defmodule XtbClient.MainSocketTest do
   doctest XtbClient.MainSocket
 
   alias XtbClient.MainSocket
-  alias XtbClient.Messages.{ChartLast, ChartRange}
+  alias XtbClient.Messages.{DateRange, ChartLast, ChartRange, ProfitCalculation}
 
   setup_all do
     {
@@ -26,12 +26,12 @@ defmodule XtbClient.MainSocketTest do
     assert state.stream_session_id != nil
   end
 
-  @tag timeout: 2 * 60 * 1000
+  @tag timeout: 2 * 30 * 1000
   test "sends ping after login", context do
     {:ok, pid} = MainSocket.start_link(context)
     :sys.trace(pid, true)
 
-    Process.sleep(2 * 59 * 1000)
+    Process.sleep(2 * 29 * 1000)
   end
 
   test "get all symbols", context do
@@ -94,6 +94,15 @@ defmodule XtbClient.MainSocketTest do
     Process.sleep(5_000)
   end
 
+  test "get current user data", context do
+    {:ok, pid} = MainSocket.start_link(context)
+    :sys.trace(pid, true)
+
+    MainSocket.get_current_user_data(pid)
+
+    Process.sleep(5_000)
+  end
+
   test "get margin level", context do
     {:ok, pid} = MainSocket.start_link(context)
 
@@ -102,10 +111,43 @@ defmodule XtbClient.MainSocketTest do
     Process.sleep(5_000)
   end
 
-  test "get symbol", context do
+  test "get margin trade", context do
     {:ok, pid} = MainSocket.start_link(context)
 
-    MainSocket.get_symbol(pid, "EURPLN")
+    MainSocket.get_margin_trade(pid, "EURPLN", 1.0)
+
+    Process.sleep(5_000)
+  end
+
+  test "get news", context do
+    {:ok, pid} = MainSocket.start_link(context)
+
+    args = %{
+      from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
+      to: DateTime.utc_now()
+    }
+
+    query = DateRange.new(args)
+
+    MainSocket.get_news(pid, query)
+
+    Process.sleep(5_000)
+  end
+
+  test "get profit calculation", context do
+    {:ok, pid} = MainSocket.start_link(context)
+
+    args = %{
+      open_price: 1.2233,
+      close_price: 1.3,
+      operation: :buy,
+      symbol: "EURPLN",
+      volume: 1.0
+    }
+
+    query = ProfitCalculation.Query.new(args)
+
+    MainSocket.get_profit_calculation(pid, query)
 
     Process.sleep(5_000)
   end
@@ -114,6 +156,14 @@ defmodule XtbClient.MainSocketTest do
     {:ok, pid} = MainSocket.start_link(context)
 
     MainSocket.get_server_time(pid)
+
+    Process.sleep(5_000)
+  end
+
+  test "get symbol", context do
+    {:ok, pid} = MainSocket.start_link(context)
+
+    MainSocket.get_symbol(pid, "EURPLN")
 
     Process.sleep(5_000)
   end

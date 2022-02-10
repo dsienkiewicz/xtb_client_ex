@@ -16,14 +16,14 @@ defmodule XtbClient.StreamingSocketTest do
 
     Process.sleep(1_000)
 
-    {:ok, %{mpid: mpid}}
+    {:ok, %{url: System.get_env("XTB_API_URL"), type: :demo, mpid: mpid}}
   end
 
   test "subscribes to getBalance", context do
-    %{mpid: mpid} = context
-    %{url: url, stream_session_id: stream_session_id} = :sys.get_state(mpid)
+    %{url: url, type: type, mpid: mpid} = context
+    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
 
-    stream_params = %{url: "#{url}/demoStream", stream_session_id: stream_session_id}
+    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
     {:ok, spid} = StreamingSocket.start_link(stream_params)
     :sys.trace(spid, true)
 
@@ -33,10 +33,10 @@ defmodule XtbClient.StreamingSocketTest do
 
   @tag timeout: 2 * 60 * 1000
   test "subscribe to getCandles", context do
-    %{mpid: mpid} = context
-    %{url: url, stream_session_id: stream_session_id} = :sys.get_state(mpid)
+    %{url: url, type: type, mpid: mpid} = context
+    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
 
-    stream_params = %{url: "#{url}/demoStream", stream_session_id: stream_session_id}
+    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
     {:ok, spid} = StreamingSocket.start_link(stream_params)
     :sys.trace(spid, true)
 
@@ -45,10 +45,10 @@ defmodule XtbClient.StreamingSocketTest do
   end
 
   test "subsribes to getKeepAlive", context do
-    %{mpid: mpid} = context
-    %{url: url, stream_session_id: stream_session_id} = :sys.get_state(mpid)
+    %{url: url, type: type, mpid: mpid} = context
+    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
 
-    stream_params = %{url: "#{url}/demoStream", stream_session_id: stream_session_id}
+    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
     {:ok, spid} = StreamingSocket.start_link(stream_params)
     :sys.trace(spid, true)
 
