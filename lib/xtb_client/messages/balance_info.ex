@@ -57,4 +57,35 @@ defmodule XtbClient.Messages.BalanceInfo do
       stock_value: stock_value
     }
   end
+
+  def new(%{
+        "balance" => balance,
+        "cashStockValue" => cash_stock_value,
+        "credit" => credit,
+        "equity" => equity,
+        "equityFX" => equity_fx,
+        "margin" => margin,
+        "marginFree" => margin_free,
+        "marginLevel" => margin_level,
+        "stockLock" => stock_lock,
+        "stockValue" => stock_value
+      })
+      when is_number(balance) and is_number(cash_stock_value) and is_number(credit) and
+             is_number(equity) and is_number(equity_fx) and
+             is_number(margin) and is_number(margin_free) and is_number(margin_level) and
+             is_number(stock_lock) and is_number(stock_value) do
+    %__MODULE__{
+      balance: balance,
+      cash_stock_value: cash_stock_value,
+      credit: credit,
+      currency: "",
+      equity: equity,
+      equity_fx: equity_fx,
+      margin: margin,
+      margin_free: margin_free,
+      margin_level: margin_level,
+      stock_lock: stock_lock,
+      stock_value: stock_value
+    }
+  end
 end

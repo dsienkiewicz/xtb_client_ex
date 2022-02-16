@@ -3,6 +3,13 @@ defmodule XtbClient.StreamingSocket do
 
   alias XtbClient.{AccountType}
 
+  alias XtbClient.Messages.{
+    BalanceInfo,
+    CandleInfo,
+    NewsInfo,
+    ProfitInfo
+  }
+
   require Logger
 
   @interval 30 * 1000
@@ -46,15 +53,21 @@ defmodule XtbClient.StreamingSocket do
     WebSockex.send_frame(client, {:text, message})
   end
 
+  def subscribe_keep_alive(client) do
+    %{stream_session_id: stream_session_id} = :sys.get_state(client)
+    message = encode_streaming_command("getKeepAlive", stream_session_id)
+    WebSockex.send_frame(client, {:text, message})
+  end
+
   def subscribe_get_news(client) do
     %{stream_session_id: stream_session_id} = :sys.get_state(client)
     message = encode_streaming_command("getNews", stream_session_id)
     WebSockex.send_frame(client, {:text, message})
   end
 
-  def subscribe_keep_alive(client) do
+  def subscribe_get_profits(client) do
     %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    message = encode_streaming_command("getKeepAlive", stream_session_id)
+    message = encode_streaming_command("getProfits", stream_session_id)
     WebSockex.send_frame(client, {:text, message})
   end
 
@@ -83,16 +96,22 @@ defmodule XtbClient.StreamingSocket do
   end
 
   defp handle_message(
-         %{"command" => "balance", "data" => _data} = _message,
+         %{"command" => "balance", "data" => data} = _message,
          state
        ) do
+    balance_info = BalanceInfo.new(data)
+    IO.inspect("Balance info: #{inspect(balance_info)}")
+
     state
   end
 
   defp handle_message(
-         %{"command" => "candle", "data" => _data} = _message,
+         %{"command" => "candle", "data" => data} = _message,
          state
        ) do
+    candle_info = CandleInfo.new(data)
+    IO.inspect("Candle info: #{inspect(candle_info)}")
+
     state
   end
 
@@ -100,6 +119,26 @@ defmodule XtbClient.StreamingSocket do
          %{"command" => "keepAlive", "data" => _data} = _message,
          state
        ) do
+    state
+  end
+
+  defp handle_message(
+         %{"command" => "news", "data" => data} = _message,
+         state
+       ) do
+    news_info = NewsInfo.new(data)
+    IO.inspect("News info: #{inspect(news_info)}")
+
+    state
+  end
+
+  defp handle_message(
+         %{"command" => "profit", "data" => data} = _message,
+         state
+       ) do
+    profit_info = ProfitInfo.new(data)
+    IO.inspect("Profit info: #{inspect(profit_info)}")
+
     state
   end
 

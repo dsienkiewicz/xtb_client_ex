@@ -29,4 +29,23 @@ defmodule XtbClient.Messages.NewsInfo do
       title: title
     }
   end
+
+  def new(%{
+        "body" => body,
+        "key" => key,
+        "time" => time_value,
+        "title" => title
+      })
+      when is_binary(body) and
+             is_binary(key) and is_number(time_value) and
+             is_binary(title) do
+    %__MODULE__{
+      body: body,
+      body_length: String.length(body),
+      key: key,
+      time: DateTime.from_unix!(time_value, :millisecond),
+      time_string: "",
+      title: title
+    }
+  end
 end
