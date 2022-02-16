@@ -5,6 +5,7 @@ defmodule XtbClient.MainSocket do
 
   alias XtbClient.Messages.{
     BalanceInfo,
+    CalendarInfo,
     ChartLast,
     ChartRange,
     CommissionDefinition,
@@ -13,6 +14,7 @@ defmodule XtbClient.MainSocket do
     NewsInfo,
     ProfitCalculation,
     RateInfo,
+    SymbolInfo,
     UserInfo
   }
 
@@ -164,6 +166,36 @@ defmodule XtbClient.MainSocket do
   defp handle_message(
          %{
            "status" => true,
+           "returnData" => [%{"ask" => _, "bid" => _} | _] = response
+         } = _message,
+         state
+       ) do
+    symbols_result =
+      response
+      |> Enum.map(&SymbolInfo.new(&1))
+
+    IO.inspect("Symbols : #{inspect(symbols_result)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => [%{"country" => _, "current" => _} | _] = response
+         } = _message,
+         state
+       ) do
+    calendar_info =
+      response
+      |> Enum.map(&CalendarInfo.new(&1))
+
+    IO.inspect("Calendar info: #{inspect(calendar_info)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
            "returnData" => %{"commission" => _, "rateOfExchange" => _} = response
          } = _message,
          state
@@ -233,6 +265,18 @@ defmodule XtbClient.MainSocket do
        ) do
     profit_result = ProfitCalculation.new(response)
     IO.inspect("Profit calculation: #{inspect(profit_result)}")
+    state
+  end
+
+  defp handle_message(
+         %{
+           "status" => true,
+           "returnData" => %{"ask" => _, "bid" => _} = response
+         } = _message,
+         state
+       ) do
+    symbol_info = SymbolInfo.new(response)
+    IO.inspect("Symbol info: #{inspect(symbol_info)}")
     state
   end
 

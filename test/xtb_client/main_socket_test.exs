@@ -163,7 +163,7 @@ defmodule XtbClient.MainSocketTest do
   test "get symbol", context do
     {:ok, pid} = MainSocket.start_link(context)
 
-    MainSocket.get_symbol(pid, "EURPLN")
+    MainSocket.get_symbol(pid, "BHW.PL_9")
 
     Process.sleep(5_000)
   end
