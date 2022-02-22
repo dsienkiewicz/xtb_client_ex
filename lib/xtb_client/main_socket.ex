@@ -30,15 +30,16 @@ defmodule XtbClient.MainSocket do
     account_type = AccountType.format_main(type)
     url = "#{url}/#{account_type}"
 
+    state = Map.put(state, :queries, %{})
     WebSockex.start_link(url, __MODULE__, state)
   end
 
   @impl WebSockex
-  def handle_connect(_conn, %{user: user, password: password} = state) do
+  def handle_connect(_conn, %{user: user, password: password, app_name: app_name} = state) do
     login_args = %{
       "userId" => user,
       "password" => password,
-      "appName" => "XtbClient"
+      "appName" => app_name
     }
 
     message = encode_command("login", login_args)
@@ -53,6 +54,29 @@ defmodule XtbClient.MainSocket do
 
   defp schedule_work(message, interval) do
     Process.send_after(self(), message, interval)
+  end
+
+  def query(client, pid, ref, method, params) do
+    WebSockex.cast(client, {:query, {pid, ref, method, params}})
+  end
+
+  @impl WebSockex
+  def handle_cast({:query, {pid, ref, method, _params}}, %{queries: queries} = state) do
+    message = encode_command(method, ref)
+    queries = Map.put(queries, ref, {:query, pid, ref})
+    state = Map.put(state, :queries, queries)
+
+    {:reply, {:text, message}, state}
+  end
+
+  @impl WebSockex
+  def handle_cast({:send, frame}, state) do
+    {:reply, frame, state}
+  end
+
+  def get_stream_session_id(client) do
+    %{stream_session_id: stream_session_id} = :sys.get_state(client)
+    stream_session_id
   end
 
   def get_all_symbols(client) do
@@ -122,25 +146,52 @@ defmodule XtbClient.MainSocket do
     WebSockex.send_frame(client, {:text, message})
   end
 
-  defp encode_command(type, opts) do
-    Jason.encode!(%{
-      command: type,
-      arguments: opts
-    })
-  end
-
   defp encode_command(type) do
     Jason.encode!(%{
       command: type
     })
   end
 
+  defp encode_command(type, tag) when is_binary(tag) do
+    Jason.encode!(%{
+      command: type,
+      customTag: tag
+    })
+  end
+
+  defp encode_command(type, args) when is_map(args) do
+    Jason.encode!(%{
+      command: type,
+      arguments: args
+    })
+  end
+
+  # defp encode_command(type, args, tag) when is_map(args) and is_binary(tag) do
+  #   Jason.encode!(%{
+  #     command: type,
+  #     arguments: args,
+  #     customTag: tag
+  #   })
+  # end
+
   @impl WebSockex
-  def handle_frame({:text, msg}, state) do
+  def handle_frame({:text, msg}, %{queries: queries} = state) do
     resp = Jason.decode!(msg)
 
-    state = handle_message(resp, state)
-    {:ok, state}
+    case resp do
+      %{"customTag" => ref} ->
+        {{:query, pid, ^ref}, queries} = Map.pop(queries, ref)
+        state = Map.put(state, :queries, queries)
+
+        result = handle_message(resp, state)
+        GenServer.cast(pid, {:response, ref, result})
+
+        {:ok, state}
+
+      _ ->
+        result = handle_message(resp, state)
+        {:ok, result}
+    end
   end
 
   defp handle_message(
@@ -168,14 +219,13 @@ defmodule XtbClient.MainSocket do
            "status" => true,
            "returnData" => [%{"ask" => _, "bid" => _} | _] = response
          } = _message,
-         state
+         _state
        ) do
     symbols_result =
       response
       |> Enum.map(&SymbolInfo.new(&1))
 
-    IO.inspect("Symbols : #{inspect(symbols_result)}")
-    state
+    symbols_result
   end
 
   defp handle_message(
@@ -298,11 +348,6 @@ defmodule XtbClient.MainSocket do
   defp handle_message(%{"status" => false} = message, state) do
     IO.inspect("Handle failed command response - Message: #{inspect(message)}")
     state
-  end
-
-  @impl WebSockex
-  def handle_cast({:send, frame}, state) do
-    {:reply, frame, state}
   end
 
   @impl WebSockex

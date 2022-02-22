@@ -14,46 +14,35 @@ defmodule XtbClient.StreamingSocketTest do
         url: url,
         user: System.get_env("XTB_API_USERNAME"),
         password: System.get_env("XTB_API_PASSWORD"),
-        type: type
+        type: type,
+        app_name: "XtbClient"
       })
 
     Process.sleep(1_000)
+    stream_session_id = MainSocket.get_stream_session_id(mpid)
 
-    {:ok, %{url: url, type: type, mpid: mpid}}
+    {:ok, %{url: url, type: type, stream_session_id: stream_session_id}}
   end
 
-  @tag timeout: 31 * 1000
   test "subscribes to getBalance", context do
-    %{url: url, type: type, mpid: mpid} = context
-    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
-
-    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
-    {:ok, spid} = StreamingSocket.start_link(stream_params)
+    {:ok, spid} = StreamingSocket.start_link(context)
     :sys.trace(spid, true)
 
-    :ok = StreamingSocket.subscribe_get_balance(spid)
+    :ok = StreamingSocket.subscribe_get_balance(spid, context)
     Process.sleep(30 * 1000)
   end
 
   @tag timeout: 2 * 60 * 1000
   test "subscribe to getCandles", context do
-    %{url: url, type: type, mpid: mpid} = context
-    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
-
-    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
-    {:ok, spid} = StreamingSocket.start_link(stream_params)
+    {:ok, spid} = StreamingSocket.start_link(context)
     :sys.trace(spid, true)
 
-    :ok = StreamingSocket.subscribe_get_candles(spid, "EURPLN")
+    :ok = StreamingSocket.subscribe_get_candles(spid, Map.put(context, :symbol, "EURPLN"))
     Process.sleep(2 * 59 * 1000)
   end
 
   test "subsribes to getKeepAlive", context do
-    %{url: url, type: type, mpid: mpid} = context
-    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
-
-    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
-    {:ok, spid} = StreamingSocket.start_link(stream_params)
+    {:ok, spid} = StreamingSocket.start_link(context)
     :sys.trace(spid, true)
 
     :ok = StreamingSocket.subscribe_keep_alive(spid)
@@ -61,11 +50,7 @@ defmodule XtbClient.StreamingSocketTest do
   end
 
   test "subsribes to getNews", context do
-    %{url: url, type: type, mpid: mpid} = context
-    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
-
-    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
-    {:ok, spid} = StreamingSocket.start_link(stream_params)
+    {:ok, spid} = StreamingSocket.start_link(context)
     :sys.trace(spid, true)
 
     :ok = StreamingSocket.subscribe_get_news(spid)
@@ -73,11 +58,7 @@ defmodule XtbClient.StreamingSocketTest do
   end
 
   test "subsribes to getProfit", context do
-    %{url: url, type: type, mpid: mpid} = context
-    %{stream_session_id: stream_session_id} = :sys.get_state(mpid)
-
-    stream_params = %{url: url, type: type, stream_session_id: stream_session_id}
-    {:ok, spid} = StreamingSocket.start_link(stream_params)
+    {:ok, spid} = StreamingSocket.start_link(context)
     :sys.trace(spid, true)
 
     :ok = StreamingSocket.subscribe_get_profits(spid)

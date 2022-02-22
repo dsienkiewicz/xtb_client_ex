@@ -12,7 +12,8 @@ defmodule XtbClient.MainSocketTest do
         url: System.get_env("XTB_API_URL"),
         user: System.get_env("XTB_API_USERNAME"),
         password: System.get_env("XTB_API_PASSWORD"),
-        type: :demo
+        type: :demo,
+        app_name: "XtbClient"
       }
     }
   end
@@ -22,8 +23,8 @@ defmodule XtbClient.MainSocketTest do
 
     Process.sleep(1_000)
 
-    state = :sys.get_state(pid)
-    assert state.stream_session_id != nil
+    stream_session_id = MainSocket.get_stream_session_id(pid)
+    assert stream_session_id != nil
   end
 
   @tag timeout: 2 * 30 * 1000
