@@ -177,7 +177,7 @@ defmodule XtbClient.ConnectionTest do
     query = TradingHours.Query.new(args)
 
     result = Connection.get_trading_hours(pid, query)
-    IO.inspect(result)
+
     assert %TradingHours{} = result
     assert [elem | _] = result.data
     assert %TradingHour{} = elem
