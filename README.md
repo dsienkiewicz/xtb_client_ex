@@ -19,3 +19,11 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/xtb_client_ex](https://hexdocs.pm/xtb_client_ex).
 
+## Manual testing
+```elixir
+params = %{app_name: "XtbClient", password: "<<PASSWORD>>", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>"}
+
+{:ok, pid} = XtbClient.Connection.start_link(params)
+
+symb = XtbClient.Connection.get_all_symbols(pid)
+```

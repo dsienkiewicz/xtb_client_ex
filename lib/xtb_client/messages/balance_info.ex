@@ -88,4 +88,12 @@ defmodule XtbClient.Messages.BalanceInfo do
       stock_value: stock_value
     }
   end
+
+  def match(%{"balance" => _, "credit" => _} = data) do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_data) do
+    {:no_match}
+  end
 end

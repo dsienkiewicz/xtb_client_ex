@@ -1,4 +1,18 @@
 defmodule XtbClient.Messages.SymbolInfo do
+  defmodule Query do
+    @enforce_keys [:symbol]
+
+    @derive Jason.Encoder
+    defstruct symbol: ""
+
+    def new(symbol)
+        when is_binary(symbol) do
+      %__MODULE__{
+        symbol: symbol
+      }
+    end
+  end
+
   alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
 
   @enforce_keys [
@@ -214,5 +228,13 @@ defmodule XtbClient.Messages.SymbolInfo do
       trailing_enabled: trailing_enabled,
       type: type
     }
+  end
+
+  def match(%{"ask" => _, "bid" => _} = data) do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_data) do
+    {:no_match}
   end
 end

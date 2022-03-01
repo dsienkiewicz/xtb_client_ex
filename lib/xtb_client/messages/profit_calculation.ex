@@ -40,4 +40,12 @@ defmodule XtbClient.Messages.ProfitCalculation do
       profit: profit
     }
   end
+
+  def match(%{"profit" => _} = data) do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_data) do
+    {:no_match}
+  end
 end

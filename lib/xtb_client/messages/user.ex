@@ -35,4 +35,12 @@ defmodule XtbClient.Messages.UserInfo do
       trailing_stop: trailing_stop
     }
   end
+
+  def match(%{"companyUnit" => _, "currency" => _} = data) do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_data) do
+    {:no_match}
+  end
 end

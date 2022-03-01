@@ -9,4 +9,12 @@ defmodule XtbClient.Messages.MarginTrade do
       margin: margin
     }
   end
+
+  def match(%{"margin" => _} = data) do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_data) do
+    {:no_match}
+  end
 end
