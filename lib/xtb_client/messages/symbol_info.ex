@@ -230,7 +230,7 @@ defmodule XtbClient.Messages.SymbolInfo do
     }
   end
 
-  def match(%{"ask" => _, "bid" => _} = data) do
+  def match(%{"ask" => _, "bid" => _, "type" => _} = data) do
     {:ok, __MODULE__.new(data)}
   end
 

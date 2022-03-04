@@ -12,8 +12,12 @@ defmodule XtbClient.Messages do
     StepRules,
     SymbolInfo,
     SymbolInfos,
+    TradeInfos,
+    TradeTransaction,
+    TradeTransactionStatus,
     TradingHours,
-    UserInfo
+    UserInfo,
+    Version
   }
 
   def format_period(period) do
@@ -36,8 +40,12 @@ defmodule XtbClient.Messages do
     StepRules,
     SymbolInfo,
     SymbolInfos,
+    TradeInfos,
+    TradeTransaction,
+    TradeTransactionStatus,
     TradingHours,
-    UserInfo
+    UserInfo,
+    Version
   ]
 
   def decode_message(data) do
@@ -47,6 +55,7 @@ defmodule XtbClient.Messages do
       # |> Enum.map(fn h ->
       #   try do
       #     IO.inspect(h, label: "map handler")
+      #     IO.inspect(data, label: "return response data")
       #     h.match(data)
       #   rescue
       #     x -> IO.inspect(x, label: "rescue")

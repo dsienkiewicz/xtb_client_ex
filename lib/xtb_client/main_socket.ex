@@ -136,6 +136,14 @@ defmodule XtbClient.MainSocket do
     {:ok, state}
   end
 
+  defp handle_response(
+         %{"status" => false, "errorCode" => code, "errorDescr" => message},
+         state
+       ) do
+    Logger.error("Exception: #{inspect(%{code: code, message: message})}")
+    {:close, state}
+  end
+
   @impl WebSockex
   def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
     schedule_work(message, interval)

@@ -26,9 +26,14 @@ defmodule XtbClient.ConnectionTest do
     SymbolInfo,
     SymbolInfos,
     SymbolVolume,
+    TradeInfos,
+    Trades,
+    TradeTransaction,
+    TradeTransactionStatus,
     TradingHours,
     TradingHour,
-    UserInfo
+    UserInfo,
+    Version
   }
 
   setup_all do
@@ -41,6 +46,8 @@ defmodule XtbClient.ConnectionTest do
     }
 
     {:ok, pid} = Connection.start_link(params)
+    # :sys.trace(pid, true)
+
     {:ok, %{pid: pid}}
   end
 
@@ -185,5 +192,68 @@ defmodule XtbClient.ConnectionTest do
     assert [trading | _] = elem.trading
     assert %Quote{} = qu
     assert %Quote{} = trading
+  end
+
+  test "get version", %{pid: pid} do
+    result = Connection.get_version(pid)
+
+    assert %Version{} = result
+  end
+
+  test "trade transaction - open and close transaction", %{pid: pid} do
+    buy_args = %{
+      operation: :buy,
+      custom_comment: "Buy transaction",
+      price: 1200.0,
+      symbol: "LITECOIN",
+      type: :open,
+      volume: 0.5
+    }
+
+    buy = TradeTransaction.Command.new(buy_args)
+    result = Connection.trade_transaction(pid, buy)
+
+    assert %TradeTransaction{} = result
+
+    open_order_id = result.order
+    status = TradeTransactionStatus.Query.new(open_order_id)
+    result = Connection.trade_transaction_status(pid, status)
+
+    assert %TradeTransactionStatus{} = result
+    # delay when transaction is still pending
+    case result.status do
+      :accepted -> :ok
+      :pending -> Process.sleep(1000)
+    end
+
+    trades_query = Trades.Query.new(true)
+    result = Connection.get_trades(pid, trades_query)
+
+    assert %TradeInfos{} = result
+
+    position_to_close =
+      result.data
+      |> Enum.find(&(&1.order_closed == open_order_id))
+
+    close_args = %{
+      operation: :buy,
+      custom_comment: "Close transaction",
+      price: position_to_close.open_price - 0.01,
+      symbol: "LITECOIN",
+      order: position_to_close.order_opened,
+      type: :close,
+      volume: 0.5
+    }
+
+    close = TradeTransaction.Command.new(close_args)
+    result = Connection.trade_transaction(pid, close)
+
+    assert %TradeTransaction{} = result
+
+    close_order_id = result.order
+    status = TradeTransactionStatus.Query.new(close_order_id)
+    result = Connection.trade_transaction_status(pid, status)
+
+    assert %TradeTransactionStatus{status: :accepted} = result
   end
 end
