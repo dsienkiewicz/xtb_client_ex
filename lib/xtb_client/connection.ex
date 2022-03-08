@@ -10,6 +10,7 @@ defmodule XtbClient.Connection do
     ProfitCalculation,
     SymbolInfo,
     SymbolVolume,
+    TickPrices,
     TradeInfos,
     Trades,
     TradeTransaction,
@@ -97,7 +98,8 @@ defmodule XtbClient.Connection do
     GenServer.call(pid, {"getSymbol", params})
   end
 
-  def get_tick_prices do
+  def get_tick_prices(pid, %TickPrices.Query{} = params) do
+    GenServer.call(pid, {"getTickPrices", params})
   end
 
   def get_trade_records(pid, %TradeInfos.Query{} = params) do
@@ -108,7 +110,8 @@ defmodule XtbClient.Connection do
     GenServer.call(pid, {"getTrades", params})
   end
 
-  def get_trades_history do
+  def get_trades_history(pid, %DateRange{} = params) do
+    GenServer.call(pid, {"getTradesHistory", params})
   end
 
   def get_trading_hours(pid, %TradingHours.Query{} = params) do

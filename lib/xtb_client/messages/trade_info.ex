@@ -38,8 +38,8 @@ defmodule XtbClient.Messages.TradeInfo do
         "closed" => closed,
         "cmd" => operation,
         "comment" => comment,
-        "commission" => commission,
         "customComment" => custom_comment,
+        "commission" => commission,
         "digits" => digits,
         "expiration" => expiration_value,
         "expirationString" => expiration_string,
@@ -61,10 +61,23 @@ defmodule XtbClient.Messages.TradeInfo do
         "timestamp" => timestamp_value,
         "tp" => take_profit,
         "volume" => volume
-      }) do
+      })
+      when is_number(close_price) and is_boolean(closed) and
+             is_integer(operation) and
+             is_binary(comment) and is_binary(custom_comment) and
+             is_number(commission) and is_integer(digits) and is_number(margin_rate) and
+             is_integer(offset) and
+             is_number(open_price) and is_integer(open_time_value) and is_binary(open_time_string) and
+             is_integer(order_opened) and is_integer(order_closed) and is_integer(position) and
+             is_number(profit) and is_number(stop_loss) and is_number(spread) and
+             is_number(storage) and
+             is_binary(symbol) and is_number(taxes) and is_integer(timestamp_value) and
+             is_number(take_profit) and is_number(volume) do
     %__MODULE__{
       close_price: close_price,
-      close_time: close_time_value,
+      close_time:
+        (not is_nil(close_time_value) && DateTime.from_unix!(close_time_value, :millisecond)) ||
+          close_time_value,
       close_time_string: close_time_string,
       closed: closed,
       operation: Operation.parse(operation),
@@ -72,7 +85,9 @@ defmodule XtbClient.Messages.TradeInfo do
       commission: commission,
       custom_comment: custom_comment,
       digits: digits,
-      expiration: expiration_value,
+      expiration:
+        (not is_nil(expiration_value) && DateTime.from_unix!(expiration_value, :millisecond)) ||
+          expiration_value,
       expiration_string: expiration_string,
       margin_rate: margin_rate,
       nominal_value: nominal_value,

@@ -13,7 +13,6 @@ defmodule XtbClient.Messages.TradingHours do
   end
 
   alias XtbClient.Messages.TradingHour
-
   @enforce_keys [:data]
 
   @derive Jason.Encoder

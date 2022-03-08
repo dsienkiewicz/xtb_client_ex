@@ -1,5 +1,5 @@
 defmodule XtbClient.ConnectionTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   doctest XtbClient.Connection
 
   alias XtbClient.Connection
@@ -26,7 +26,10 @@ defmodule XtbClient.ConnectionTest do
     SymbolInfo,
     SymbolInfos,
     SymbolVolume,
+    TickPrices,
+    TickPrice,
     TradeInfos,
+    TradeInfo,
     Trades,
     TradeTransaction,
     TradeTransactionStatus,
@@ -163,13 +166,6 @@ defmodule XtbClient.ConnectionTest do
     assert %ServerTime{} = result
   end
 
-  test "get symbol", %{pid: pid} do
-    query = SymbolInfo.Query.new("BHW.PL_9")
-    result = Connection.get_symbol(pid, query)
-
-    assert %SymbolInfo{} = result
-  end
-
   test "get step rules", %{pid: pid} do
     result = Connection.get_step_rules(pid)
 
@@ -177,6 +173,42 @@ defmodule XtbClient.ConnectionTest do
     assert [elem | _] = result.data
     assert %StepRule{steps: [step | _]} = elem
     assert %Step{} = step
+  end
+
+  test "get symbol", %{pid: pid} do
+    query = SymbolInfo.Query.new("BHW.PL_9")
+    result = Connection.get_symbol(pid, query)
+
+    assert %SymbolInfo{} = result
+  end
+
+  test "get tick prices", %{pid: pid} do
+    args = %{
+      level: 0,
+      symbols: ["EURPLN"],
+      timestamp: DateTime.utc_now() |> DateTime.add(-2 * 60)
+    }
+
+    query = TickPrices.Query.new(args)
+    result = Connection.get_tick_prices(pid, query)
+
+    assert %TickPrices{} = result
+    assert [elem | _] = result.data
+    assert %TickPrice{} = elem
+  end
+
+  test "get trades history", %{pid: pid} do
+    args = %{
+      from: DateTime.utc_now() |> DateTime.add(-3 * 31 * 24 * 60 * 60),
+      to: DateTime.utc_now()
+    }
+
+    query = DateRange.new(args)
+    result = Connection.get_trades_history(pid, query)
+
+    assert %TradeInfos{} = result
+    assert [elem | _] = result.data
+    assert %TradeInfo{} = elem
   end
 
   test "get trading hours", %{pid: pid} do
@@ -215,17 +247,19 @@ defmodule XtbClient.ConnectionTest do
 
     assert %TradeTransaction{} = result
 
+    # needs some time for server to process order correctly
+    Process.sleep(100)
+
     open_order_id = result.order
     status = TradeTransactionStatus.Query.new(open_order_id)
     result = Connection.trade_transaction_status(pid, status)
 
     assert %TradeTransactionStatus{} = result
-    # delay when transaction is still pending
-    case result.status do
-      :accepted -> :ok
-      :pending -> Process.sleep(1000)
-    end
 
+    # needs some time for server to process order correctly
+    Process.sleep(100)
+
+    # 1. way - get all opened only trades
     trades_query = Trades.Query.new(true)
     result = Connection.get_trades(pid, trades_query)
 
@@ -234,6 +268,12 @@ defmodule XtbClient.ConnectionTest do
     position_to_close =
       result.data
       |> Enum.find(&(&1.order_closed == open_order_id))
+
+    # 2. way - get trades by position IDs
+    trades_records_query = TradeInfos.Query.new([position_to_close.position])
+    result = Connection.get_trade_records(pid, trades_records_query)
+
+    assert %TradeInfos{} = result
 
     close_args = %{
       operation: :buy,
@@ -249,6 +289,9 @@ defmodule XtbClient.ConnectionTest do
     result = Connection.trade_transaction(pid, close)
 
     assert %TradeTransaction{} = result
+
+    # needs some time for server to process order correctly
+    Process.sleep(100)
 
     close_order_id = result.order
     status = TradeTransactionStatus.Query.new(close_order_id)

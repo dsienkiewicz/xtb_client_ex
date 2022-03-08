@@ -141,6 +141,7 @@ defmodule XtbClient.MainSocket do
          state
        ) do
     Logger.error("Exception: #{inspect(%{code: code, message: message})}")
+
     {:close, state}
   end
 
