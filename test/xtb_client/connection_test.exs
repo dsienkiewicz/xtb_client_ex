@@ -1,5 +1,5 @@
 defmodule XtbClient.ConnectionTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   doctest XtbClient.Connection
 
   alias XtbClient.Connection

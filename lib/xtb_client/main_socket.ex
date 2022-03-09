@@ -6,7 +6,8 @@ defmodule XtbClient.MainSocket do
 
   require Logger
 
-  @interval 30 * 1000
+  @ping_interval 30 * 1000
+  @rate_limit_interval 200
 
   @moduledoc """
   Documentation for `XtbClient`.
@@ -16,7 +17,11 @@ defmodule XtbClient.MainSocket do
     account_type = AccountType.format_main(type)
     url = "#{url}/#{account_type}"
 
-    state = Map.put(state, :queries, %{})
+    state =
+      state
+      |> Map.put(:queries, %{})
+      |> Map.put(:last_query, actual_rate())
+
     WebSockex.start_link(url, __MODULE__, state)
   end
 
@@ -32,7 +37,7 @@ defmodule XtbClient.MainSocket do
     WebSockex.cast(self(), {:send, {:text, message}})
 
     ping_command = encode_command("ping")
-    ping_message = {:ping, {:text, ping_command}, @interval}
+    ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
 
     {:ok, state}
@@ -51,19 +56,37 @@ defmodule XtbClient.MainSocket do
   end
 
   @impl WebSockex
-  def handle_cast({:query, {pid, ref, method}}, %{queries: queries} = state) do
+  def handle_cast(
+        {:query, {pid, ref, method}},
+        %{queries: queries, last_query: last_query} = state
+      ) do
+    last_query = check_rate(last_query, actual_rate())
+
     message = encode_command(method, ref)
     queries = Map.put(queries, ref, {:query, pid, ref})
-    state = Map.put(state, :queries, queries)
+
+    state =
+      state
+      |> Map.put(:queries, queries)
+      |> Map.put(:last_query, last_query)
 
     {:reply, {:text, message}, state}
   end
 
   @impl WebSockex
-  def handle_cast({:query, {pid, ref, method, params}}, %{queries: queries} = state) do
+  def handle_cast(
+        {:query, {pid, ref, method, params}},
+        %{queries: queries, last_query: last_query} = state
+      ) do
+    last_query = check_rate(last_query, actual_rate())
+
     message = encode_command(method, params, ref)
     queries = Map.put(queries, ref, {:query, pid, ref})
-    state = Map.put(state, :queries, queries)
+
+    state =
+      state
+      |> Map.put(:queries, queries)
+      |> Map.put(:last_query, last_query)
 
     {:reply, {:text, message}, state}
   end
@@ -71,6 +94,24 @@ defmodule XtbClient.MainSocket do
   @impl WebSockex
   def handle_cast({:send, frame}, state) do
     {:reply, frame, state}
+  end
+
+  defp check_rate(prev_rate_ms, actual_rate_ms) do
+    rate_diff = actual_rate_ms - prev_rate_ms
+
+    case rate_diff > @rate_limit_interval do
+      true ->
+        actual_rate_ms
+
+      false ->
+        Process.sleep(rate_diff)
+        actual_rate()
+    end
+  end
+
+  defp actual_rate() do
+    DateTime.utc_now()
+    |> DateTime.to_unix(:millisecond)
   end
 
   def get_stream_session_id(client) do
