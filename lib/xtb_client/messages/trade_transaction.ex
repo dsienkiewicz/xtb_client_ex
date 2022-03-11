@@ -77,11 +77,11 @@ defmodule XtbClient.Messages.TradeTransaction do
     }
   end
 
-  def match(%{"order" => _} = data) when map_size(data) == 1 do
+  def match(method, data) when method in ["tradeTransaction"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

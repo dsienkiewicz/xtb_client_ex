@@ -12,11 +12,11 @@ defmodule XtbClient.Messages.SymbolInfos do
     }
   end
 
-  def match([%{"ask" => _, "bid" => _} | _] = data) do
+  def match(method, data) when method in ["getAllSymbols"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

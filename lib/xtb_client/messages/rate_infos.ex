@@ -19,11 +19,11 @@ defmodule XtbClient.Messages.RateInfos do
     }
   end
 
-  def match(%{"digits" => _digits, "rateInfos" => _rate_infos} = data) do
+  def match(method, data) when method in ["getChartLastRequest", "getChartRangeRequest"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

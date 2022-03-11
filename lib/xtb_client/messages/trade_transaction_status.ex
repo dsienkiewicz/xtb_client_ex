@@ -42,11 +42,11 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
     }
   end
 
-  def match(%{"order" => _, "requestStatus" => _} = data) do
+  def match(method, data) when method in ["tradeTransactionStatus"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

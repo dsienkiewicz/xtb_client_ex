@@ -35,11 +35,11 @@ defmodule XtbClient.Messages.TickPrices do
     }
   end
 
-  def match(%{"quotations" => data = [%{"high" => _, "low" => _, "symbol" => _} | _]}) do
+  def match(method, %{"quotations" => data}) when method in ["getTickPrices"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

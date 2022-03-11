@@ -26,11 +26,11 @@ defmodule XtbClient.Messages.TradingHours do
     }
   end
 
-  def match([%{"quotes" => _, "symbol" => _, "trading" => _} | _] = data) do
+  def match(method, data) when method in ["getTradingHours"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

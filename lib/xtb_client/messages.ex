@@ -50,19 +50,10 @@ defmodule XtbClient.Messages do
     Version
   ]
 
-  def decode_message(data) do
+  def decode_message(method, data) do
     result =
       @message_handlers
-      |> Enum.map(& &1.match(data))
-      # |> Enum.map(fn h ->
-      #   try do
-      #     IO.inspect(h, label: "map handler")
-      #     IO.inspect(data, label: "return response data")
-      #     h.match(data)
-      #   rescue
-      #     x -> IO.inspect(x, label: "rescue")
-      #   end
-      # end)
+      |> Enum.map(& &1.match(method, data))
       |> Enum.find(fn x ->
         case x do
           {:ok, _} = res -> res
@@ -72,7 +63,7 @@ defmodule XtbClient.Messages do
 
     case result do
       {:ok, mapped_result} -> mapped_result
-      _ -> {:error, "No handler found for data #{inspect(data)}."}
+      _ -> {:error, "No handler found for method `#{method}` with data `#{inspect(data)}`."}
     end
   end
 end

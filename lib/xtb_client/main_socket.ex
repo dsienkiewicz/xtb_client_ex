@@ -63,7 +63,7 @@ defmodule XtbClient.MainSocket do
     last_query = check_rate(last_query, actual_rate())
 
     message = encode_command(method, ref)
-    queries = Map.put(queries, ref, {:query, pid, ref})
+    queries = Map.put(queries, ref, {:query, pid, ref, method})
 
     state =
       state
@@ -81,7 +81,7 @@ defmodule XtbClient.MainSocket do
     last_query = check_rate(last_query, actual_rate())
 
     message = encode_command(method, params, ref)
-    queries = Map.put(queries, ref, {:query, pid, ref})
+    queries = Map.put(queries, ref, {:query, pid, ref, method})
 
     state =
       state
@@ -157,10 +157,10 @@ defmodule XtbClient.MainSocket do
          %{"status" => true, "returnData" => data, "customTag" => ref},
          %{queries: queries} = state
        ) do
-    {{:query, pid, ^ref}, queries} = Map.pop(queries, ref)
+    {{:query, pid, ^ref, method}, queries} = Map.pop(queries, ref)
     state = Map.put(state, :queries, queries)
 
-    result = Messages.decode_message(data)
+    result = Messages.decode_message(method, data)
     GenServer.cast(pid, {:response, ref, result})
 
     {:ok, state}

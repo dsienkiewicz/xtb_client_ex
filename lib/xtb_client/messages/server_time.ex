@@ -16,11 +16,11 @@ defmodule XtbClient.Messages.ServerTime do
     }
   end
 
-  def match(%{"time" => _, "timeString" => _} = data) when map_size(data) == 2 do
+  def match(method, data) when method in ["getServerTime"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end

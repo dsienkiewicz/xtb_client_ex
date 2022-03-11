@@ -13,11 +13,11 @@ defmodule XtbClient.Messages.CommissionDefinition do
     }
   end
 
-  def match(%{"commission" => _, "rateOfExchange" => _} = data) do
+  def match(method, data) when method in ["getCommissionDef"] do
     {:ok, __MODULE__.new(data)}
   end
 
-  def match(_data) do
+  def match(_method, _data) do
     {:no_match}
   end
 end
