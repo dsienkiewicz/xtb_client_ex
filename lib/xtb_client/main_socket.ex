@@ -40,11 +40,20 @@ defmodule XtbClient.MainSocket do
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
 
+    state =
+      state
+      |> Map.delete(:user)
+      |> Map.delete(:password)
+
     {:ok, state}
   end
 
   defp schedule_work(message, interval) do
     Process.send_after(self(), message, interval)
+  end
+
+  def stream_session_id(client, pid) do
+    WebSockex.cast(client, {:stream_session_id, pid})
   end
 
   def query(client, pid, ref, method) do
@@ -53,6 +62,16 @@ defmodule XtbClient.MainSocket do
 
   def query(client, pid, ref, method, params) do
     WebSockex.cast(client, {:query, {pid, ref, method, params}})
+  end
+
+  @impl WebSockex
+  def handle_cast(
+        {:stream_session_id, pid},
+        %{stream_session_id: result} = state
+      ) do
+    GenServer.cast(pid, {:stream_session_id, result})
+
+    {:ok, state}
   end
 
   @impl WebSockex
@@ -114,11 +133,6 @@ defmodule XtbClient.MainSocket do
     |> DateTime.to_unix(:millisecond)
   end
 
-  def get_stream_session_id(client) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    stream_session_id
-  end
-
   defp encode_command(type) do
     Jason.encode!(%{
       command: type
@@ -168,8 +182,6 @@ defmodule XtbClient.MainSocket do
 
   defp handle_response(%{"status" => true, "streamSessionId" => stream_session_id}, state) do
     state = Map.put_new(state, :stream_session_id, stream_session_id)
-    # GenServer.cast(pid, {:response, ref, result})
-
     {:ok, state}
   end
 

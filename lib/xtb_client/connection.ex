@@ -27,19 +27,15 @@ defmodule XtbClient.Connection do
   def init(state) do
     {:ok, mpid} = MainSocket.start_link(state)
     Process.sleep(1_000)
-
-    session_id = MainSocket.get_stream_session_id(mpid)
-    args = Map.put(state, :stream_session_id, session_id)
-    {:ok, spid} = StreamingSocket.start_link(args)
+    MainSocket.stream_session_id(mpid, self())
 
     Process.flag(:trap_exit, true)
 
-    new_state =
+    state =
       state
       |> Map.put(:mpid, mpid)
-      |> Map.put(:spid, spid)
 
-    {:ok, new_state}
+    {:ok, state}
   end
 
   def get_all_symbols(pid) do
@@ -157,6 +153,15 @@ defmodule XtbClient.Connection do
     {client, clients} = Map.pop!(clients, ref)
     GenServer.reply(client, resp)
     state = %{state | clients: clients}
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:stream_session_id, session_id} = _message, state) do
+    args = Map.put(state, :stream_session_id, session_id)
+    {:ok, spid} = StreamingSocket.start_link(args)
+
+    state = Map.put(state, :spid, spid)
 
     {:noreply, state}
   end

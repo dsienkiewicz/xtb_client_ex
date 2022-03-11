@@ -22,8 +22,8 @@ defmodule XtbClient.MainSocketTest do
 
     Process.sleep(1_000)
 
-    stream_session_id = MainSocket.get_stream_session_id(pid)
-    assert stream_session_id != nil
+    MainSocket.stream_session_id(pid, self())
+    assert_receive {:"$gen_cast", {:stream_session_id, _}}
   end
 
   @tag timeout: 2 * 30 * 1000
@@ -31,5 +31,7 @@ defmodule XtbClient.MainSocketTest do
     {:ok, pid} = MainSocket.start_link(context)
 
     Process.sleep(2 * 29 * 1000)
+
+    assert Process.alive?(pid) == true
   end
 end
