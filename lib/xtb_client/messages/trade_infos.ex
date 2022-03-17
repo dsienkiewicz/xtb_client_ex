@@ -25,6 +25,10 @@ defmodule XtbClient.Messages.TradeInfos do
     }
   end
 
+  def new(data) when is_map(data) do
+    TradeInfo.new(data)
+  end
+
   def match(method, data) when method in ["getTradeRecords", "getTrades", "getTradesHistory"] do
     {:ok, __MODULE__.new(data)}
   end

@@ -2,17 +2,12 @@ defmodule XtbClient.StreamingSocket do
   use WebSockex
 
   alias XtbClient.{AccountType}
-
-  alias XtbClient.Messages.{
-    BalanceInfo,
-    CandleInfo,
-    NewsInfo,
-    ProfitInfo
-  }
+  alias XtbClient.Messages
 
   require Logger
 
-  @interval 30 * 1000
+  @ping_interval 30 * 1000
+  @rate_limit_interval 200
 
   @moduledoc """
   Documentation for `XtbClient`.
@@ -22,14 +17,24 @@ defmodule XtbClient.StreamingSocket do
     account_type = AccountType.format_streaming(type)
     url = "#{url}/#{account_type}"
 
+    state =
+      state
+      |> Map.put(:last_sub, actual_rate())
+      |> Map.put(:subscriptions, %{})
+
     WebSockex.start_link(url, __MODULE__, state)
   end
 
   @impl WebSockex
-  def handle_connect(_conn, %{stream_session_id: stream_session_id} = state) do
+  def handle_connect(_conn, %{user: _, password: _, stream_session_id: stream_session_id} = state) do
     ping_command = encode_streaming_command("ping", stream_session_id)
-    ping_message = {:ping, {:text, ping_command}, @interval}
+    ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
+
+    state =
+      state
+      |> Map.delete(:user)
+      |> Map.delete(:password)
 
     {:ok, state}
   end
@@ -38,37 +43,66 @@ defmodule XtbClient.StreamingSocket do
     Process.send_after(self(), message, interval)
   end
 
-  def subscribe_get_balance(client) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    message = encode_streaming_command("getBalance", stream_session_id)
-    WebSockex.send_frame(client, {:text, message})
+  def subscribe(client, pid, ref, method) do
+    WebSockex.cast(client, {:subscribe, {pid, ref, method}})
   end
 
-  def subscribe_get_candles(client, symbol_name) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-
-    message =
-      encode_streaming_command("getCandles", stream_session_id, %{"symbol" => symbol_name})
-
-    WebSockex.send_frame(client, {:text, message})
+  def subscribe(client, pid, ref, method, params) do
+    WebSockex.cast(client, {:subscribe, {pid, ref, method, params}})
   end
 
-  def subscribe_keep_alive(client) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    message = encode_streaming_command("getKeepAlive", stream_session_id)
-    WebSockex.send_frame(client, {:text, message})
+  @impl WebSockex
+  def handle_cast(
+        {:subscribe, {pid, ref, method}},
+        %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
+      ) do
+    last_sub = check_rate(last_sub, actual_rate())
+
+    message = encode_streaming_command(method, session_id)
+    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
+
+    state =
+      state
+      |> Map.put(:subscriptions, subscriptions)
+      |> Map.put(:last_sub, last_sub)
+
+    {:reply, {:text, message}, state}
   end
 
-  def subscribe_get_news(client) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    message = encode_streaming_command("getNews", stream_session_id)
-    WebSockex.send_frame(client, {:text, message})
+  @impl WebSockex
+  def handle_cast(
+        {:subscribe, {pid, ref, method, params}},
+        %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
+      ) do
+    last_sub = check_rate(last_sub, actual_rate())
+
+    message = encode_streaming_command(method, session_id, params)
+    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
+
+    state =
+      state
+      |> Map.put(:subscriptions, subscriptions)
+      |> Map.put(:last_sub, last_sub)
+
+    {:reply, {:text, message}, state}
   end
 
-  def subscribe_get_profits(client) do
-    %{stream_session_id: stream_session_id} = :sys.get_state(client)
-    message = encode_streaming_command("getProfits", stream_session_id)
-    WebSockex.send_frame(client, {:text, message})
+  defp check_rate(prev_rate_ms, actual_rate_ms) do
+    rate_diff = actual_rate_ms - prev_rate_ms
+
+    case rate_diff > @rate_limit_interval do
+      true ->
+        actual_rate_ms
+
+      false ->
+        Process.sleep(rate_diff)
+        actual_rate()
+    end
+  end
+
+  defp actual_rate() do
+    DateTime.utc_now()
+    |> DateTime.to_unix(:millisecond)
   end
 
   defp encode_streaming_command(type, streaming_session_id) do
@@ -83,68 +117,39 @@ defmodule XtbClient.StreamingSocket do
       command: type,
       streamSessionId: streaming_session_id
     }
-    |> Map.merge(params)
+    |> Map.merge(Map.from_struct(params))
     |> Jason.encode!()
   end
 
   @impl WebSockex
-  def handle_frame({:text, message}, state) do
-    resp = Jason.decode!(message)
+  def handle_frame({:text, msg}, state) do
+    resp = Jason.decode!(msg)
+    handle_response(resp, state)
+  end
 
-    state = handle_message(resp, state)
+  defp handle_response(
+         %{"command" => command, "data" => data},
+         %{subscriptions: subscriptions} = state
+       ) do
+    {:subscription, pid, ^command, method} = Map.get(subscriptions, command)
+
+    result = Messages.decode_message(method, data)
+    GenServer.cast(pid, {:stream, method, result})
+
     {:ok, state}
   end
 
-  defp handle_message(
-         %{"command" => "balance", "data" => data} = _message,
-         state
-       ) do
-    balance_info = BalanceInfo.new(data)
-    IO.inspect("Balance info: #{inspect(balance_info)}")
-
-    state
+  defp handle_response(%{"status" => true}, state) do
+    {:ok, state}
   end
 
-  defp handle_message(
-         %{"command" => "candle", "data" => data} = _message,
+  defp handle_response(
+         %{"status" => false, "errorCode" => code, "errorDescr" => message},
          state
        ) do
-    candle_info = CandleInfo.new(data)
-    IO.inspect("Candle info: #{inspect(candle_info)}")
+    Logger.error("Exception: #{inspect(%{code: code, message: message})}")
 
-    state
-  end
-
-  defp handle_message(
-         %{"command" => "keepAlive", "data" => _data} = _message,
-         state
-       ) do
-    state
-  end
-
-  defp handle_message(
-         %{"command" => "news", "data" => data} = _message,
-         state
-       ) do
-    news_info = NewsInfo.new(data)
-    IO.inspect("News info: #{inspect(news_info)}")
-
-    state
-  end
-
-  defp handle_message(
-         %{"command" => "profit", "data" => data} = _message,
-         state
-       ) do
-    profit_info = ProfitInfo.new(data)
-    IO.inspect("Profit info: #{inspect(profit_info)}")
-
-    state
-  end
-
-  defp handle_message(%{"status" => false} = message, state) do
-    IO.inspect("Handle failed command response - Message: #{inspect(message)}")
-    state
+    {:close, state}
   end
 
   @impl WebSockex

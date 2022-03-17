@@ -12,6 +12,10 @@ defmodule XtbClient.Messages.NewsInfos do
     }
   end
 
+  def new(data) when is_map(data) do
+    NewsInfo.new(data)
+  end
+
   def match(method, data) when method in ["getNews"] do
     {:ok, __MODULE__.new(data)}
   end

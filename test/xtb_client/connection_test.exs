@@ -8,6 +8,7 @@ defmodule XtbClient.ConnectionTest do
     BalanceInfo,
     CalendarInfos,
     CalendarInfo,
+    Candles,
     ChartLast,
     ChartRange,
     CommissionDefinition,
@@ -17,6 +18,7 @@ defmodule XtbClient.ConnectionTest do
     NewsInfo,
     ProfitCalculation,
     Quote,
+    Quotations,
     RateInfos,
     RateInfo,
     ServerTime,
@@ -298,5 +300,187 @@ defmodule XtbClient.ConnectionTest do
     result = Connection.trade_transaction_status(pid, status)
 
     assert %TradeTransactionStatus{status: :accepted} = result
+  end
+
+  test "subscribe to get balance", %{pid: pid} do
+    buy_args = %{
+      operation: :buy,
+      custom_comment: "Buy transaction",
+      price: 1200.0,
+      symbol: "LITECOIN",
+      type: :open,
+      volume: 0.5
+    }
+
+    buy = TradeTransaction.Command.new(buy_args)
+    result = Connection.trade_transaction(pid, buy)
+
+    assert %TradeTransaction{} = result
+    open_order_id = result.order
+
+    # needs some time for server to process order correctly
+    Process.sleep(1000)
+
+    # real test scneario
+    Connection.subscribe_get_balance(pid, self())
+
+    # wait for some ticks
+    Process.sleep(10 * 1000)
+
+    # 1. way - get all opened only trades
+    trades_query = Trades.Query.new(true)
+    result = Connection.get_trades(pid, trades_query)
+
+    assert %TradeInfos{} = result
+
+    position_to_close =
+      result.data
+      |> Enum.find(&(&1.order_closed == open_order_id))
+
+    close_args = %{
+      operation: :buy,
+      custom_comment: "Close transaction",
+      price: position_to_close.open_price - 0.01,
+      symbol: "LITECOIN",
+      order: position_to_close.order_opened,
+      type: :close,
+      volume: 0.5
+    }
+
+    close = TradeTransaction.Command.new(close_args)
+    result = Connection.trade_transaction(pid, close)
+
+    assert %TradeTransaction{} = result
+  end
+
+  @tag timeout: 2 * 60 * 1000
+  test "subscribe to get candles", %{pid: pid} do
+    args = "EURPLN"
+    query = Candles.Query.new(args)
+    Connection.subscribe_get_candles(pid, self(), query)
+
+    Process.sleep(2 * 59 * 1000)
+  end
+
+  test "subscribe to keep alive", %{pid: pid} do
+    Connection.subscribe_keep_alive(pid, self())
+
+    Process.sleep(30 * 1000)
+  end
+
+  test "subscribe to get news", %{pid: pid} do
+    Connection.subscribe_get_news(pid, self())
+
+    Process.sleep(59 * 1000)
+  end
+
+  test "subscribe to get profits", %{pid: pid} do
+    buy_args = %{
+      operation: :buy,
+      custom_comment: "Buy transaction",
+      price: 1200.0,
+      symbol: "LITECOIN",
+      type: :open,
+      volume: 0.5
+    }
+
+    buy = TradeTransaction.Command.new(buy_args)
+    result = Connection.trade_transaction(pid, buy)
+
+    assert %TradeTransaction{} = result
+    open_order_id = result.order
+
+    # needs some time for server to process order correctly
+    Process.sleep(1000)
+
+    # real test scneario
+    Connection.subscribe_get_profits(pid, self())
+
+    # wait for some ticks
+    Process.sleep(10 * 1000)
+
+    # 1. way - get all opened only trades
+    trades_query = Trades.Query.new(true)
+    result = Connection.get_trades(pid, trades_query)
+
+    assert %TradeInfos{} = result
+
+    position_to_close =
+      result.data
+      |> Enum.find(&(&1.order_closed == open_order_id))
+
+    close_args = %{
+      operation: :buy,
+      custom_comment: "Close transaction",
+      price: position_to_close.open_price - 0.01,
+      symbol: "LITECOIN",
+      order: position_to_close.order_opened,
+      type: :close,
+      volume: 0.5
+    }
+
+    close = TradeTransaction.Command.new(close_args)
+    result = Connection.trade_transaction(pid, close)
+
+    assert %TradeTransaction{} = result
+  end
+
+  test "subscribe to get tick prices", %{pid: pid} do
+    args = %{symbol: "EURPLN"}
+    query = Quotations.Query.new(args)
+    Connection.subscribe_get_tick_prices(pid, self(), query)
+
+    Process.sleep(59 * 1000)
+  end
+
+  test "subscribe to get trades + trade status", %{pid: pid} do
+    Connection.subscribe_get_trades(pid, self())
+    Connection.subscribe_get_trade_status(pid, self())
+
+    buy_args = %{
+      operation: :buy,
+      custom_comment: "Buy transaction",
+      price: 1200.0,
+      symbol: "LITECOIN",
+      type: :open,
+      volume: 0.5
+    }
+
+    buy = TradeTransaction.Command.new(buy_args)
+    result = Connection.trade_transaction(pid, buy)
+
+    assert %TradeTransaction{} = result
+    open_order_id = result.order
+
+    # needs some time for server to process order correctly
+    Process.sleep(10 * 1000)
+
+    # 1. way - get all opened only trades
+    trades_query = Trades.Query.new(true)
+    result = Connection.get_trades(pid, trades_query)
+
+    assert %TradeInfos{} = result
+
+    position_to_close =
+      result.data
+      |> Enum.find(&(&1.order_closed == open_order_id))
+
+    close_args = %{
+      operation: :buy,
+      custom_comment: "Close transaction",
+      price: position_to_close.open_price - 0.01,
+      symbol: "LITECOIN",
+      order: position_to_close.order_opened,
+      type: :close,
+      volume: 0.5
+    }
+
+    close = TradeTransaction.Command.new(close_args)
+    result = Connection.trade_transaction(pid, close)
+
+    assert %TradeTransaction{} = result
+
+    # needs some time for server to process order correctly
+    Process.sleep(10 * 1000)
   end
 end

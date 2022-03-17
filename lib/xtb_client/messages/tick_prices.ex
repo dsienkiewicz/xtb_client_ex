@@ -35,7 +35,7 @@ defmodule XtbClient.Messages.TickPrices do
     }
   end
 
-  def match(method, %{"quotations" => data}) when method in ["getTickPrices"] do
+  def match(method, %{"quotations" => data}) when method in ["getTickPrices"] and is_list(data) do
     {:ok, __MODULE__.new(data)}
   end
 

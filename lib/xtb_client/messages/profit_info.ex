@@ -40,4 +40,12 @@ defmodule XtbClient.Messages.ProfitInfo do
       profit_recalc_price: profit_recalc_price
     }
   end
+
+  def match(method, data) when method in ["getProfits"] do
+    {:ok, __MODULE__.new(data)}
+  end
+
+  def match(_method, _data) do
+    {:no_match}
+  end
 end

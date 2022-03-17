@@ -4,10 +4,12 @@ defmodule XtbClient.Connection do
   alias XtbClient.{MainSocket, StreamingSocket}
 
   alias XtbClient.Messages.{
+    Candles,
     ChartLast,
     ChartRange,
     DateRange,
     ProfitCalculation,
+    Quotations,
     SymbolInfo,
     SymbolVolume,
     TickPrices,
@@ -19,7 +21,11 @@ defmodule XtbClient.Connection do
   }
 
   def start_link(args) do
-    state = Map.put(args, :clients, %{})
+    state =
+      args
+      |> Map.put(:clients, %{})
+      |> Map.put(:subscribers, %{})
+
     GenServer.start_link(__MODULE__, state, [])
   end
 
@@ -126,6 +132,38 @@ defmodule XtbClient.Connection do
     GenServer.call(pid, {"tradeTransactionStatus", params})
   end
 
+  def subscribe_get_balance(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getBalance", "balance", subscriber})
+  end
+
+  def subscribe_get_candles(pid, subscriber, %Candles.Query{} = params) do
+    GenServer.cast(pid, {:subscribe, "getCandles", "candle", subscriber, params})
+  end
+
+  def subscribe_keep_alive(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getKeepAlive", "keepAlive", subscriber})
+  end
+
+  def subscribe_get_news(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getNews", "news", subscriber})
+  end
+
+  def subscribe_get_profits(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getProfits", "profit", subscriber})
+  end
+
+  def subscribe_get_tick_prices(pid, subscriber, %Quotations.Query{} = params) do
+    GenServer.cast(pid, {:subscribe, "getTickPrices", "tickPrices", subscriber, params})
+  end
+
+  def subscribe_get_trades(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getTrades", "trade", subscriber})
+  end
+
+  def subscribe_get_trade_status(pid, subscriber) do
+    GenServer.cast(pid, {:subscribe, "getTradeStatus", "tradeStatus", subscriber})
+  end
+
   @impl true
   def handle_call({method}, {_pid, ref} = from, %{mpid: mpid, clients: clients} = state) do
     ref_string = inspect(ref)
@@ -157,11 +195,48 @@ defmodule XtbClient.Connection do
     {:noreply, state}
   end
 
+  @impl true
   def handle_cast({:stream_session_id, session_id} = _message, state) do
     args = Map.put(state, :stream_session_id, session_id)
     {:ok, spid} = StreamingSocket.start_link(args)
 
     state = Map.put(state, :spid, spid)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(
+        {:subscribe, method, response_method, subscriber} = _message,
+        %{spid: spid, subscribers: subscribers} = state
+      ) do
+    StreamingSocket.subscribe(spid, self(), response_method, method)
+
+    subscribers = Map.put(subscribers, method, subscriber)
+    state = %{state | subscribers: subscribers}
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(
+        {:subscribe, method, response_method, subscriber, params} = _message,
+        %{spid: spid, subscribers: subscribers} = state
+      ) do
+    StreamingSocket.subscribe(spid, self(), response_method, method, params)
+
+    subscribers = Map.put(subscribers, method, subscriber)
+    state = %{state | subscribers: subscribers}
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast(
+        {:stream, method, result} = _message,
+        %{subscribers: _subscribers} = state
+      ) do
+    IO.inspect({method, result}, label: "handle_cast stream")
 
     {:noreply, state}
   end

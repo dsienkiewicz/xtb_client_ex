@@ -19,9 +19,12 @@ defmodule XtbClient.StreamingSocketTest do
       })
 
     Process.sleep(1_000)
-    stream_session_id = MainSocket.get_stream_session_id(mpid)
+    MainSocket.stream_session_id(pid, self())
 
-    {:ok, %{url: url, type: type, stream_session_id: stream_session_id}}
+    receive do
+      {:stream_session_id, session_id} ->
+        {:ok, %{url: url, type: type, stream_session_id: session_id}}
+    end
   end
 
   test "subscribes to getBalance", context do
