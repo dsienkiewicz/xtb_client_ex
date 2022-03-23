@@ -13,28 +13,23 @@ defmodule XtbClient.StreamingSocket do
   Documentation for `XtbClient`.
   """
 
-  def start_link(%{url: url, type: type} = state) do
+  def start_link(%{url: url, type: type, stream_session_id: _stream_session_id} = state) do
     account_type = AccountType.format_streaming(type)
-    url = "#{url}/#{account_type}"
+    uri = URI.merge(url, account_type) |> URI.to_string()
 
     state =
       state
       |> Map.put(:last_sub, actual_rate())
       |> Map.put(:subscriptions, %{})
 
-    WebSockex.start_link(url, __MODULE__, state)
+    WebSockex.start_link(uri, __MODULE__, state)
   end
 
   @impl WebSockex
-  def handle_connect(_conn, %{user: _, password: _, stream_session_id: stream_session_id} = state) do
+  def handle_connect(_conn, %{stream_session_id: stream_session_id} = state) do
     ping_command = encode_streaming_command("ping", stream_session_id)
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
-
-    state =
-      state
-      |> Map.delete(:user)
-      |> Map.delete(:password)
 
     {:ok, state}
   end

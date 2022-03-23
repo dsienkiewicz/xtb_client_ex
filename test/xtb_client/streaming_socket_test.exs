@@ -19,52 +19,20 @@ defmodule XtbClient.StreamingSocketTest do
       })
 
     Process.sleep(1_000)
-    MainSocket.stream_session_id(pid, self())
+    MainSocket.stream_session_id(mpid, self())
 
     receive do
-      {:stream_session_id, session_id} ->
+      {:"$gen_cast", {:stream_session_id, session_id}} ->
         {:ok, %{url: url, type: type, stream_session_id: session_id}}
     end
   end
 
-  test "subscribes to getBalance", context do
-    {:ok, spid} = StreamingSocket.start_link(context)
-    :sys.trace(spid, true)
+  @tag timeout: 2 * 30 * 1000
+  test "sends ping after login", context do
+    {:ok, pid} = StreamingSocket.start_link(context)
 
-    :ok = StreamingSocket.subscribe_get_balance(spid, context)
-    Process.sleep(30 * 1000)
-  end
+    Process.sleep(2 * 29 * 1000)
 
-  @tag timeout: 2 * 60 * 1000
-  test "subscribe to getCandles", context do
-    {:ok, spid} = StreamingSocket.start_link(context)
-    :sys.trace(spid, true)
-
-    :ok = StreamingSocket.subscribe_get_candles(spid, Map.put(context, :symbol, "EURPLN"))
-    Process.sleep(2 * 59 * 1000)
-  end
-
-  test "subsribes to getKeepAlive", context do
-    {:ok, spid} = StreamingSocket.start_link(context)
-    :sys.trace(spid, true)
-
-    :ok = StreamingSocket.subscribe_keep_alive(spid)
-    Process.sleep(6 * 1000)
-  end
-
-  test "subsribes to getNews", context do
-    {:ok, spid} = StreamingSocket.start_link(context)
-    :sys.trace(spid, true)
-
-    :ok = StreamingSocket.subscribe_get_news(spid)
-    Process.sleep(6 * 1000)
-  end
-
-  test "subsribes to getProfit", context do
-    {:ok, spid} = StreamingSocket.start_link(context)
-    :sys.trace(spid, true)
-
-    :ok = StreamingSocket.subscribe_get_profits(spid)
-    Process.sleep(6 * 1000)
+    assert Process.alive?(pid) == true
   end
 end

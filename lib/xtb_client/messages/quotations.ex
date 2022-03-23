@@ -32,7 +32,8 @@ defmodule XtbClient.Messages.Quotations do
 
   alias XtbClient.Messages.TickPrice
 
-  def match(method, data) when method in ["getTickPrices"] and is_map(data) do
+  def match(method, data)
+      when method in ["getTickPrices"] and is_map(data) and map_size(data) > 1 do
     {:ok, TickPrice.new(data)}
   end
 

@@ -20,6 +20,8 @@ defmodule XtbClient.Connection do
     TradingHours
   }
 
+  require Logger
+
   def start_link(args) do
     state =
       args
@@ -40,6 +42,8 @@ defmodule XtbClient.Connection do
     state =
       state
       |> Map.put(:mpid, mpid)
+      |> Map.delete(:user)
+      |> Map.delete(:password)
 
     {:ok, state}
   end
@@ -234,15 +238,20 @@ defmodule XtbClient.Connection do
   @impl true
   def handle_cast(
         {:stream, method, result} = _message,
-        %{subscribers: _subscribers} = state
+        %{subscribers: subscribers} = state
       ) do
-    IO.inspect({method, result}, label: "handle_cast stream")
+    subscriber = Map.get(subscribers, method)
+    send(subscriber, {:ok, result})
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:EXIT, _pid, _reason}, state) do
+  def handle_info({:EXIT, pid, reason}, state) do
+    Logger.error(
+      "Module handled exit message from #{inspect(pid)} with reason #{inspect(reason)}."
+    )
+
     {:stop, :shutdown, state}
   end
 end

@@ -1,5 +1,5 @@
 defmodule XtbClient.Messages.QuoteId do
-  def parse(value) when is_number(value) and value > 0 do
+  def parse(value) when is_integer(value) and value > 0 do
     parse_quote_id(value)
   end
 

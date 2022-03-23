@@ -13,16 +13,18 @@ defmodule XtbClient.MainSocket do
   Documentation for `XtbClient`.
   """
 
-  def start_link(%{url: url, type: type} = state) do
+  def start_link(
+        %{url: url, type: type, user: _user, password: _password, app_name: _app_name} = state
+      ) do
     account_type = AccountType.format_main(type)
-    url = "#{url}/#{account_type}"
+    uri = URI.merge(url, account_type) |> URI.to_string()
 
     state =
       state
       |> Map.put(:queries, %{})
       |> Map.put(:last_query, actual_rate())
 
-    WebSockex.start_link(url, __MODULE__, state)
+    WebSockex.start_link(uri, __MODULE__, state)
   end
 
   @impl WebSockex
@@ -33,8 +35,8 @@ defmodule XtbClient.MainSocket do
       "appName" => app_name
     }
 
-    message = encode_command("login", login_args)
-    WebSockex.cast(self(), {:send, {:text, message}})
+    login_message = encode_command("login", login_args)
+    WebSockex.cast(self(), {:send, {:text, login_message}})
 
     ping_command = encode_command("ping")
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
