@@ -10,7 +10,7 @@ defmodule XtbClient.StreamingSocket do
   @rate_limit_interval 200
 
   @moduledoc """
-  Documentation for `XtbClient`.
+  Documentation for `XtbClient.StreamingSocket`.
   """
 
   def start_link(%{url: url, type: type, stream_session_id: _stream_session_id} = state) do

@@ -10,7 +10,7 @@ defmodule XtbClient.MainSocket do
   @rate_limit_interval 200
 
   @moduledoc """
-  Documentation for `XtbClient`.
+  Documentation for `XtbClient.MainSocket`.
   """
 
   def start_link(

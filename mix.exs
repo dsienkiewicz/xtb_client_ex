@@ -4,11 +4,16 @@ defmodule XtbClient.MixProject do
   def project do
     [
       app: :xtb_client_ex,
+      name: "XtbClient",
       version: "0.1.0",
       elixir: "~> 1.12",
+      description: "Elixir client for the XTB trading platform",
+      source_url: "https://github.com/dsienkiewicz/xtb_client_ex",
       start_permanent: Mix.env() == :prod,
+      package: package(),
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -25,6 +30,21 @@ defmodule XtbClient.MixProject do
     [
       {:jason, "~> 1.3"},
       {:websockex, "~> 0.4.3"}
+    ]
+  end
+
+  defp package do
+    %{
+      licenses: ["MIT"],
+      maintainers: ["Daniel Sienkiewicz"],
+      links: %{"GitHub" => "https://github.com/dsienkiewicz/xtb_client_ex"}
+    }
+  end
+
+  defp docs do
+    [
+      extras: ["README.md"],
+      main: "readme"
     ]
   end
 

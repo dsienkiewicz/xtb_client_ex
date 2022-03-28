@@ -22,6 +22,10 @@ defmodule XtbClient.Connection do
 
   require Logger
 
+  @moduledoc """
+  Documentation for `XtbClient.Connection`.
+  """
+
   def start_link(args) do
     state =
       args
