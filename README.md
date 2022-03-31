@@ -41,16 +41,15 @@ params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<
 
 ### Subscribe to tick prices
 ```elixir
-iex> Code.require_file("./examples/stream_listener.ex")
+Code.require_file("./examples/stream_listener.ex")
 
-iex> {ok, lpid} = StreamListener.start_link(%{})
+{:ok, lpid} = StreamListener.start_link(%{})
+params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
+{:ok, cpid} = XtbClient.Connection.start_link(params)
 
-iex> params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
-iex> {:ok, cpid} = XtbClient.Connection.start_link(params)
-
-iex> args = %{symbol: "LITECOIN"}
-iex> query = XtbClient.Messages.Quotations.Query.new(args)
-iex> XtbClient.Connection.subscribe_get_tick_prices(cpid, lpid, query)
+args = %{symbol: "LITECOIN"}
+query = XtbClient.Messages.Quotations.Query.new(args)
+XtbClient.Connection.subscribe_get_tick_prices(cpid, lpid, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.TickPrice{

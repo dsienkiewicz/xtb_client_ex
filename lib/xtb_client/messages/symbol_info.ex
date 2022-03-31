@@ -13,7 +13,59 @@ defmodule XtbClient.Messages.SymbolInfo do
     end
   end
 
+  @moduledoc """
+  All information relevant to the symbol of security.
+  """
   alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
+
+  @type t :: %__MODULE__{
+          ask: float(),
+          bid: float(),
+          category_name: binary(),
+          contract_size: integer(),
+          currency: binary(),
+          currency_pair: true | false,
+          currency_profit: binary(),
+          description: binary(),
+          expiration: DateTime.t() | nil,
+          group_name: binary(),
+          high: float(),
+          initial_margin: integer(),
+          instant_max_volume: integer(),
+          leverage: float(),
+          long_only: true | false,
+          lot_max: float(),
+          lot_min: float(),
+          lot_step: float(),
+          low: float(),
+          margin_hedged: integer(),
+          margin_hedged_strong: true | false,
+          margin_maintenance: integer(),
+          margin_mode: MarginMode.t(),
+          percentage: float(),
+          pips_precision: integer(),
+          precision: integer(),
+          profit_mode: ProfitMode.t(),
+          quote_id: QuoteId.t() | nil,
+          short_selling: true | false,
+          spread_raw: float(),
+          spread_table: float(),
+          starting: DateTime.t() | nil,
+          step_rule_id: integer(),
+          stops_level: integer(),
+          swap_rollover_3_days: integer(),
+          swap_enable: true | false,
+          swap_long: float(),
+          swap_short: float(),
+          swap_type: integer(),
+          symbol: binary(),
+          tick_size: float(),
+          tick_value: float(),
+          time: DateTime.t(),
+          time_string: binary(),
+          trailing_enabled: true | false,
+          type: integer()
+        }
 
   @enforce_keys [
     :ask,

@@ -1,5 +1,9 @@
 defmodule XtbClient.Messages.ProfitMode do
-  def parse(value) when is_number(value) and value > 0 do
+  @type t :: :forex | :cfd
+  @type proft_number :: 5 | 6
+
+  @spec parse(proft_number()) :: t()
+  def parse(value) when is_number(value) and value in [5, 6] do
     parse_profit_mode(value)
   end
 

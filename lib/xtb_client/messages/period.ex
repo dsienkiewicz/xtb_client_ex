@@ -1,4 +1,15 @@
 defmodule XtbClient.Messages.Period do
+  @typedoc """
+  Specifies time interval - counted in minutes.
+  """
+  @type t :: :m1 | :m5 | :m15 | :m30 | :h1 | :h4 | :d1 | :w1 | :mn1
+
+  @type minute_period :: 1 | 5 | 15 | 30 | 60 | 240 | 1440 | 10080 | 43200
+
+  @doc """
+  Formats period given as `Period` to number of minutes.
+  """
+  @spec format(t()) :: minute_period()
   def format(period) when is_atom(period) do
     format_perod(period)
   end
@@ -17,6 +28,10 @@ defmodule XtbClient.Messages.Period do
     end
   end
 
+  @doc """
+  Parses value given as number of minutes to `Period` atom type.
+  """
+  @spec parse(minute_period()) :: t()
   def parse(value) when is_number(value) and value > 0 do
     parse_period(value)
   end

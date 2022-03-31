@@ -9,8 +9,16 @@ defmodule XtbClient.MainSocket do
   @ping_interval 30 * 1000
   @rate_limit_interval 200
 
+  @type client :: atom | pid | {atom, any} | {:via, atom, any}
+
   @moduledoc """
-  Documentation for `XtbClient.MainSocket`.
+  WebSocket server used for synchronous communication.
+  
+  `MainSocket` is being used like standard `GenServer` - could be started with `start_link/1` and supervised.
+  
+  After successful connection to WebSocket the flow is:
+  - process casts `login` command to obtain session with backend server,
+  - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
   """
 
   def start_link(
@@ -54,14 +62,40 @@ defmodule XtbClient.MainSocket do
     Process.send_after(self(), message, interval)
   end
 
+  @doc """
+  Casts query to get streaming session ID.
+  
+  Arguments:
+  - `client` pid of the main socket process,
+  - `pid` pid of the caller awaiting for the result.
+  
+  Result of the query will be delivered to message mailbox of the `pid` process.
+  """
+  @spec stream_session_id(client(), client()) :: :ok
   def stream_session_id(client, pid) do
     WebSockex.cast(client, {:stream_session_id, pid})
   end
 
+  @doc """
+  Casts query to get data from the backend server.
+  
+  Might be also used to send command to the backend server.
+  
+  Arguments:
+  - `client` pid of the main socket process,
+  - `pid` pid of the caller awaiting for the result,
+  - `ref` unique reference of the query,
+  - `method` name of the query method,
+  - `params` [optional] arguments of the `method`.
+  
+  Result of the query will be delivered to message mailbox of the `pid` process.
+  """
+  @spec query(client(), client(), term(), binary()) :: :ok
   def query(client, pid, ref, method) do
     WebSockex.cast(client, {:query, {pid, ref, method}})
   end
 
+  @spec query(client(), client(), term(), binary(), map()) :: :ok
   def query(client, pid, ref, method, params) do
     WebSockex.cast(client, {:query, {pid, ref, method, params}})
   end

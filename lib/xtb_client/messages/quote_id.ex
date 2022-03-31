@@ -1,5 +1,9 @@
 defmodule XtbClient.Messages.QuoteId do
-  def parse(value) when is_integer(value) and value > 0 do
+  @type t :: :fixed | :float | :depth | :cross | :five | :six
+  @type quote_number :: 1 | 2 | 3 | 4 | 5 | 6
+
+  @spec parse(quote_number()) :: t()
+  def parse(value) when is_integer(value) and value in [1, 2, 3, 4, 5, 6] do
     parse_quote_id(value)
   end
 

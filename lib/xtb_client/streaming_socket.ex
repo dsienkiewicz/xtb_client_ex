@@ -9,8 +9,15 @@ defmodule XtbClient.StreamingSocket do
   @ping_interval 30 * 1000
   @rate_limit_interval 200
 
+  @type client :: atom | pid | {atom, any} | {:via, atom, any}
+
   @moduledoc """
-  Documentation for `XtbClient.StreamingSocket`.
+  WebSocket server used for asynchronous communication.
+  
+  `StreamingSocket` is being used like standard `GenServer` - could be started with `start_link/1` and supervised.
+  
+  After successful connection to WebSocket the flow is:
+  - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
   """
 
   def start_link(%{url: url, type: type, stream_session_id: _stream_session_id} = state) do
@@ -38,10 +45,24 @@ defmodule XtbClient.StreamingSocket do
     Process.send_after(self(), message, interval)
   end
 
+  @doc """
+  Subscribes `pid` process for messages from `method` query.
+  
+    Arguments:
+  - `client` pid of the streaming socket process,
+  - `pid` pid of the caller awaiting for the result,
+  - `ref` unique reference of the query,
+  - `method` name of the query method,
+  - `params` [optional] arguments of the `method`.
+  
+  Result of the query will be delivered to message mailbox of the `pid` process.
+  """
+  @spec subscribe(client(), client(), term(), binary()) :: :ok
   def subscribe(client, pid, ref, method) do
     WebSockex.cast(client, {:subscribe, {pid, ref, method}})
   end
 
+  @spec subscribe(client(), client(), term(), binary(), map()) :: :ok
   def subscribe(client, pid, ref, method, params) do
     WebSockex.cast(client, {:subscribe, {pid, ref, method, params}})
   end

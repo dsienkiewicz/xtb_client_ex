@@ -1,4 +1,8 @@
 defmodule XtbClient.Messages.MarginMode do
+  @type t :: :forex | :cfd_leveraged | :cfd | :hundred_and_four
+  @type margin_number :: 101 | 102 | 103 | 104
+
+  @spec parse(margin_number()) :: t()
   def parse(value) when is_number(value) and value > 0 do
     parse_margin_mode(value)
   end

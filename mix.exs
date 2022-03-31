@@ -29,7 +29,8 @@ defmodule XtbClient.MixProject do
   defp deps do
     [
       {:jason, "~> 1.3"},
-      {:websockex, "~> 0.4.3"}
+      {:websockex, "~> 0.4.3"},
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
     ]
   end
 

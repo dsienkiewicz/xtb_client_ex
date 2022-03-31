@@ -1,6 +1,14 @@
 defmodule XtbClient.Messages.CalendarInfos do
   alias XtbClient.Messages.{CalendarInfo}
 
+  @moduledoc """
+  Represents result of query for list of `XtbClient.Messages.CalendarInfo`s.
+  """
+
+  @type t :: %__MODULE__{
+          data: [CalendarInfo.t()]
+        }
+
   @enforce_keys [:data]
   defstruct data: []
 

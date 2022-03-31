@@ -1,4 +1,27 @@
 defmodule XtbClient.Messages.CalendarInfo do
+  @moduledoc """
+  Calendar event, described by properties:
+  - `country` two letter country code,
+  - `current` market value (current), empty before time of release of this value (time from "time" record),
+  - `forecast` forecasted value,
+  - `impact` impact on market,
+  - `period` information period,
+  - `previous` value from previous information release,
+  - `time` time, when the information will be released (in this time empty "current" value should be changed with exact released value),
+  - `title` name of the indicator for which values will be released.
+  """
+
+  @type t :: %__MODULE__{
+          country: binary(),
+          current: binary(),
+          forecast: binary(),
+          impact: binary(),
+          period: binary(),
+          previous: binary(),
+          time: DateTime.t(),
+          title: binary()
+        }
+
   @enforce_keys [:country, :current, :forecast, :impact, :period, :previous, :time, :title]
 
   @derive Jason.Encoder

@@ -1,5 +1,15 @@
 defmodule XtbClient.Messages.RateInfos do
   alias XtbClient.Messages.{RateInfo}
+
+  @moduledoc """
+  Represents a result of query for list of `XtbClient.Messages.RateInfo`s.
+  """
+
+  @type t :: %__MODULE__{
+          digits: integer(),
+          data: [RateInfo.t()]
+        }
+
   @enforce_keys [:digits, :data]
 
   defstruct digits: 0,
@@ -9,7 +19,7 @@ defmodule XtbClient.Messages.RateInfos do
         "digits" => digits,
         "rateInfos" => rate_infos
       })
-      when is_number(digits) and
+      when is_integer(digits) and
              is_list(rate_infos) do
     %__MODULE__{
       digits: digits,
