@@ -1,5 +1,9 @@
 defmodule XtbClient.Messages.TradeInfos do
   defmodule Query do
+    @type t :: %__MODULE__{
+            orders: [binary()]
+          }
+
     @enforce_keys [:orders]
 
     @derive Jason.Encoder
@@ -13,6 +17,10 @@ defmodule XtbClient.Messages.TradeInfos do
   end
 
   alias XtbClient.Messages.TradeInfo
+
+  @type t :: %__MODULE__{
+          data: [TradeInfo.t()]
+        }
 
   @enforce_keys [:data]
   defstruct data: []

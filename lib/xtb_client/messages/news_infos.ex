@@ -1,6 +1,10 @@
 defmodule XtbClient.Messages.NewsInfos do
   alias XtbClient.Messages.NewsInfo
 
+  @type t :: %__MODULE__{
+          data: [XtbClient.Messages.NewsInfo.t()]
+        }
+
   @enforce_keys [:data]
   defstruct data: []
 

@@ -1,5 +1,9 @@
 defmodule XtbClient.Messages.TradeTransactionStatus do
   defmodule Query do
+    @type t :: %__MODULE__{
+            order: integer()
+          }
+
     @enforce_keys [:order]
 
     @derive Jason.Encoder
@@ -13,6 +17,27 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   end
 
   alias XtbClient.Messages.TransactionStatus
+
+  @moduledoc """
+  Info about the status of particular transaction.
+  
+  Parameters:
+  - `ask` price in base currency,
+  - `bid` price in base currency,
+  - `custom_comment` the value the customer may provide in order to retrieve it later,
+  - `message` can be `null`,
+  - `order` unique order number,
+  - `status` request status code, see `XtbClient.Messages.TradeStatus`.
+  """
+
+  @type t :: %__MODULE__{
+          ask: float(),
+          bid: float(),
+          custom_comment: binary(),
+          message: binary() | nil,
+          order: integer(),
+          status: TransactionStatus.t()
+        }
 
   defstruct ask: 0.0,
             bid: 0.0,

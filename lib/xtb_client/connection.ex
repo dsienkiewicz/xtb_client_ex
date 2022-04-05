@@ -170,78 +170,189 @@ defmodule XtbClient.Connection do
   
   **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_candles/3` which is the preferred way of retrieving current candle data.**
   """
+  @spec get_chart_range(client(), XtbClient.Messages.ChartRange.Query.t()) ::
+          XtbClient.Messages.RateInfos.t()
   def get_chart_range(pid, %ChartRange.Query{} = params) do
     GenServer.call(pid, {"getChartRangeRequest", %{info: params}})
   end
 
+  @doc """
+  Returns calculation of commission and rate of exchange.
+  
+  The value is calculated as expected value, and therefore might not be perfectly accurate.
+  """
+  @spec get_commission_def(client(), XtbClient.Messages.SymbolVolume.t()) ::
+          XtbClient.Messages.CommissionDefinition.t()
   def get_commission_def(pid, %SymbolVolume{} = params) do
     GenServer.call(pid, {"getCommissionDef", params})
   end
 
+  @doc """
+  Returns information about account currency, and account leverage.
+  """
+  @spec get_current_user_data(client()) :: XtbClient.Messages.UserInfo.t()
   def get_current_user_data(pid) do
     GenServer.call(pid, {"getCurrentUserData"})
   end
 
+  @doc """
+  Returns IBs data from the given time range.
+  """
+  @spec get_ibs_history(client(), XtbClient.Messages.DateRange.t()) :: any()
   def get_ibs_history(pid, %DateRange{} = params) do
     GenServer.call(pid, {"getIbsHistory", params})
   end
 
+  @doc """
+  Returns various account indicators.
+  
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_balance/2` which is the preferred way of retrieving current account indicators.**
+  """
+  @spec get_margin_level(client()) :: XtbClient.Messages.BalanceInfo.t()
   def get_margin_level(pid) do
     GenServer.call(pid, {"getMarginLevel"})
   end
 
+  @doc """
+  Returns expected margin for given instrument and volume.
+  
+  The value is calculated as expected margin value, and therefore might not be perfectly accurate.
+  """
+  @spec get_margin_trade(client(), XtbClient.Messages.SymbolVolume.t()) ::
+          XtbClient.Messages.MarginTrade.t()
   def get_margin_trade(pid, %SymbolVolume{} = params) do
     GenServer.call(pid, {"getMarginTrade", params})
   end
 
+  @doc """
+  Returns news from trading server which were sent within specified period of time.
+  
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_news/2` which is the preferred way of retrieving news data.**
+  """
+  @spec get_news(client(), XtbClient.Messages.DateRange.t()) :: XtbClient.Messages.NewsInfos.t()
   def get_news(pid, %DateRange{} = params) do
     GenServer.call(pid, {"getNews", params})
   end
 
+  @doc """
+  Calculates estimated profit for given deal data.
+  
+  Should be used for calculator-like apps only.
+  Profit for opened transactions should be taken from server, due to higher precision of server calculation.
+  """
+  @spec get_profit_calculation(client(), XtbClient.Messages.ProfitCalculation.Query.t()) ::
+          XtbClient.Messages.ProfitCalculation.t()
   def get_profit_calculation(pid, %ProfitCalculation.Query{} = params) do
     GenServer.call(pid, {"getProfitCalculation", params})
   end
 
+  @doc """
+  Returns current time on trading server.
+  """
+  @spec get_server_time(client()) :: XtbClient.Messages.ServerTime.t()
   def get_server_time(pid) do
     GenServer.call(pid, {"getServerTime"})
   end
 
+  @doc """
+  Returns a list of step rules for DMAs.
+  """
+  @spec get_step_rules(client()) :: XtbClient.Messages.StepRules.t()
   def get_step_rules(pid) do
     GenServer.call(pid, {"getStepRules"})
   end
 
+  @doc """
+  Returns information about symbol available for the user.
+  """
+  @spec get_symbol(client(), XtbClient.Messages.SymbolInfo.Query.t()) ::
+          XtbClient.Messages.SymbolInfo.t()
   def get_symbol(pid, %SymbolInfo.Query{} = params) do
     GenServer.call(pid, {"getSymbol", params})
   end
 
+  @doc """
+  Returns array of current quotations for given symbols, only quotations that changed from given timestamp are returned.
+  
+  New timestamp obtained from output will be used as an argument of the next call of this command.
+  
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_tick_prices/3` which is the preferred way of retrieving ticks data.**
+  """
+  @spec get_tick_prices(client(), XtbClient.Messages.TickPrices.Query.t()) ::
+          XtbClient.Messages.TickPrices.t()
   def get_tick_prices(pid, %TickPrices.Query{} = params) do
     GenServer.call(pid, {"getTickPrices", params})
   end
 
+  @doc """
+  Returns array of trades listed in orders query.
+  """
+  @spec get_trade_records(client(), XtbClient.Messages.TradeInfos.Query.t()) ::
+          XtbClient.Messages.TradeInfos.t()
   def get_trade_records(pid, %TradeInfos.Query{} = params) do
     GenServer.call(pid, {"getTradeRecords", params})
   end
 
+  @doc """
+  Returns array of user's trades.
+  
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_trades/2` which is the preferred way of retrieving trades data.**
+  """
+  @spec get_trades(client(), XtbClient.Messages.Trades.Query.t()) ::
+          XtbClient.Messages.TradeInfos.t()
   def get_trades(pid, %Trades.Query{} = params) do
     GenServer.call(pid, {"getTrades", params})
   end
 
+  @doc """
+  Returns array of user's trades which were closed within specified period of time.
+  """
+  @spec get_trades_history(client(), XtbClient.Messages.DateRange.t()) ::
+          XtbClient.Messages.TradeInfos.t()
   def get_trades_history(pid, %DateRange{} = params) do
     GenServer.call(pid, {"getTradesHistory", params})
   end
 
+  @doc """
+  Returns quotes and trading times.
+  """
+  @spec get_trading_hours(client(), XtbClient.Messages.TradingHours.Query.t()) ::
+          XtbClient.Messages.TradingHours.t()
   def get_trading_hours(pid, %TradingHours.Query{} = params) do
     GenServer.call(pid, {"getTradingHours", params})
   end
 
+  @doc """
+  Returns the current API version.
+  """
+  @spec get_version(client()) :: XtbClient.Messages.Version.t()
   def get_version(pid) do
     GenServer.call(pid, {"getVersion"})
   end
 
+  @doc """
+  Starts trade transaction.
+  
+  `trade_transaction/2` sends main transaction information to the server.
+  
+  ### How to verify that the trade request was accepted?
+  The status field set to 'true' does not imply that the transaction was accepted. It only means, that the server acquired your request and began to process it.
+  To analyse the status of the transaction (for example to verify if it was accepted or rejected) use the `trade_transaction_status/2` command with the order number, that came back with the response of the `trade_transaction/2` command.
+  """
+  @spec trade_transaction(client(), XtbClient.Messages.TradeTransaction.Command.t()) ::
+          XtbClient.Messages.TradeTransaction.t()
   def trade_transaction(pid, %TradeTransaction.Command{} = params) do
     GenServer.call(pid, {"tradeTransaction", %{tradeTransInfo: params}})
   end
 
+  @doc """
+  Returns current transaction status.
+  
+  At any time of transaction processing client might check the status of transaction on server side.
+  In order to do that client must provide unique order taken from `trade_transaction/2` invocation.
+  """
+  @spec trade_transaction_status(client(), XtbClient.Messages.TradeTransactionStatus.Query.t()) ::
+          XtbClient.Messages.TradeTransactionStatus.t()
   def trade_transaction_status(pid, %TradeTransactionStatus.Query{} = params) do
     GenServer.call(pid, {"tradeTransactionStatus", params})
   end

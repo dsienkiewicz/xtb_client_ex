@@ -1,5 +1,13 @@
 defmodule XtbClient.Messages.TradingHours do
   defmodule Query do
+    @moduledoc """
+    Info about the query for trading hours.
+    """
+
+    @type t :: %__MODULE__{
+            symbols: [binary()]
+          }
+
     @enforce_keys [:symbols]
 
     @derive Jason.Encoder
@@ -13,6 +21,11 @@ defmodule XtbClient.Messages.TradingHours do
   end
 
   alias XtbClient.Messages.TradingHour
+
+  @type t :: %__MODULE__{
+          data: [TradingHour.t()]
+        }
+
   @enforce_keys [:data]
 
   @derive Jason.Encoder

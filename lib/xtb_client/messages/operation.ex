@@ -1,4 +1,18 @@
 defmodule XtbClient.Messages.Operation do
+  @moduledoc """
+  Atoms for operation codes.
+  """
+
+  @type t ::
+          :buy
+          | :sell
+          | :buy_limit
+          | :sell_limit
+          | :buy_stop
+          | :sell_stop
+          | :balance
+          | :credit
+
   def parse(value) when is_integer(value) do
     parse_operation(value)
   end

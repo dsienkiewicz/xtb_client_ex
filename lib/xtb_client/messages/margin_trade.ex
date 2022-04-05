@@ -1,4 +1,12 @@
 defmodule XtbClient.Messages.MarginTrade do
+  @moduledoc """
+  Info about calculated margin in account currency.
+  """
+
+  @type t :: %__MODULE__{
+          margin: number()
+        }
+
   @enforce_keys [:margin]
 
   @derive Jason.Encoder

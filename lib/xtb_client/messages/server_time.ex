@@ -1,4 +1,13 @@
 defmodule XtbClient.Messages.ServerTime do
+  @moduledoc """
+  Info about current time on trading server.
+  """
+
+  @type t :: %__MODULE__{
+          time: DateTime.t(),
+          time_string: binary()
+        }
+
   @enforce_keys [:time, :time_string]
 
   @derive Jason.Encoder

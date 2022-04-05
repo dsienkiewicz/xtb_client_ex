@@ -1,4 +1,17 @@
 defmodule XtbClient.Messages.Day do
+  @moduledoc """
+  Atoms representing day of week.
+  """
+
+  @type t ::
+          :monday
+          | :tuesday
+          | :wednesday
+          | :thursday
+          | :friday
+          | :saturday
+          | :sunday
+
   def parse(value) when is_integer(value) and value in 1..7 do
     parse_day(value)
   end

@@ -1,6 +1,16 @@
 defmodule XtbClient.Messages.TradingHour do
   alias XtbClient.Messages.{Quote}
 
+  @moduledoc """
+  Info about one available trading hour.
+  """
+
+  @type t :: %__MODULE__{
+          quotes: [Quote.t()],
+          symbol: binary(),
+          trading: [Quote.t()]
+        }
+
   @enforce_keys [:quotes, :symbol, :trading]
 
   @derive Jason.Encoder

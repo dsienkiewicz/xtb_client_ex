@@ -1,6 +1,71 @@
 defmodule XtbClient.Messages.TradeInfo do
   alias XtbClient.Messages.Operation
 
+  @moduledoc """
+  Info about the trade that has happened.
+  
+  Parameters:
+  - `close_price` close price in base currency,
+  - `close_time` `null` if order is not closed,
+  - `closed` closed,
+  - `operation` operation code, see `XtbClient.Messages.Operation`,
+  - `comment` comment,
+  - `commission` commission in account currency, `null` if not applicable,
+  - `custom_comment` the value the customer may provide in order to retrieve it later,
+  - `digits` number of decimal places,
+  - `expiration` `null` if order is not closed,
+  - `margin_rate` margin rate,
+  - `nominal_value` nominal value, `null` if not applicable,
+  - `offset` trailing offset,
+  - `open_price` open price in base currency,
+  - `open_time` open time,
+  - `order_opened` order number for opened transaction,
+  - `order_closed` order number for closed transaction,
+  - `position` order number common both for opened and closed transaction,
+  - `profit` profit in account currency,
+  - `stop_loss` zero if stop loss is not set (in base currency),
+  - `spread` spread,
+  - `state` state,
+  - `storage` order swaps in account currency,
+  - `symbol` symbol name or `null` for deposit/withdrawal operations,
+  - `taxes` taxes,
+  - `timestamp` timestamp,
+  - `take_profit` zero if take profit is not set (in base currency),
+  - `type` type,
+  - `volume` volume in lots.
+  """
+
+  @type t :: %__MODULE__{
+          close_price: float(),
+          close_time: DateTime.t() | nil,
+          closed: boolean(),
+          operation: integer(),
+          comment: binary(),
+          commission: float() | nil,
+          custom_comment: binary(),
+          digits: integer(),
+          expiration: DateTime.t() | nil,
+          margin_rate: float(),
+          nominal_value: float() | nil,
+          offset: integer(),
+          open_price: float(),
+          open_time: DateTime.t(),
+          order_opened: integer(),
+          order_closed: integer(),
+          position: integer(),
+          profit: float(),
+          stop_loss: float(),
+          spread: float() | nil,
+          state: integer() | nil,
+          storage: float(),
+          symbol: binary() | nil,
+          taxes: float() | nil,
+          timestamp: DateTime.t() | nil,
+          take_profit: float(),
+          type: integer() | nil,
+          volume: float()
+        }
+
   @enforce_keys [
     :close_price,
     :close_time,

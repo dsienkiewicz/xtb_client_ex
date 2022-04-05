@@ -88,16 +88,16 @@ Listener handle info: {:ok,
 
 ### Subscribe to candles
 ```elixir
-iex> Code.require_file("./examples/stream_listener.ex")
+Code.require_file("./examples/stream_listener.ex")
 
-iex> {ok, lpid} = StreamListener.start_link(%{})
+{ok, lpid} = StreamListener.start_link(%{})
 
-iex> params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
-iex> {:ok, cpid} = XtbClient.Connection.start_link(params)
+params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
+{:ok, cpid} = XtbClient.Connection.start_link(params)
 
-iex> args = "LITECOIN"
-iex> query = XtbClient.Messages.Candles.Query.new(args)
-iex> XtbClient.Connection.subscribe_get_candles(cpid, lpid, query)
+args = "LITECOIN"
+query = XtbClient.Messages.Candles.Query.new(args)
+XtbClient.Connection.subscribe_get_candles(cpid, lpid, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.Candle{

@@ -1,4 +1,17 @@
 defmodule XtbClient.Messages.CommissionDefinition do
+  @moduledoc """
+  Info about commission definition.
+  
+  Parameters:
+  - `commission` calculated commission in account currency,
+  - `rate_of_exchange` rate of exchange between account currency and instrument base currency.
+  """
+
+  @type t :: %__MODULE__{
+          commission: number(),
+          rate_of_exchange: number()
+        }
+
   @enforce_keys [:commission, :rate_of_exchange]
 
   @derive Jason.Encoder

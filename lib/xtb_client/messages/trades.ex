@@ -1,5 +1,13 @@
 defmodule XtbClient.Messages.Trades do
   defmodule Query do
+    @moduledoc """
+    Info about the query for trades.
+    """
+
+    @type t :: %__MODULE__{
+            openedOnly: boolean()
+          }
+
     @enforce_keys [:openedOnly]
 
     @derive Jason.Encoder

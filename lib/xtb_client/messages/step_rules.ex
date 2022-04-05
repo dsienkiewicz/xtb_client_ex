@@ -1,5 +1,10 @@
 defmodule XtbClient.Messages.StepRules do
   alias XtbClient.Messages.StepRule
+
+  @type t :: %__MODULE__{
+          data: [StepRule.t()]
+        }
+
   @enforce_keys [:data]
 
   defstruct data: []

@@ -1,5 +1,13 @@
 defmodule XtbClient.Messages.SymbolInfo do
   defmodule Query do
+    @moduledoc """
+    Info about the query for symbol info.
+    """
+
+    @type t :: %__MODULE__{
+            symbol: binary()
+          }
+
     @enforce_keys [:symbol]
 
     @derive Jason.Encoder
@@ -15,7 +23,58 @@ defmodule XtbClient.Messages.SymbolInfo do
 
   @moduledoc """
   All information relevant to the symbol of security.
+  
+  Please be advised that result values for profit and margin calculation can be used optionally, because server is able to perform all profit/margin calculations for Client application by commands described later in this document.
+  
+  Parameters:
+  - `ask` ask price in base currency,
+  - `bid` bid price in base currency,
+  - `category_name` category name,
+  - `contract_size` size of 1 lot,
+  - `currency` currency,
+  - `currency_pair` indicates whether the symbol represents a currency pair,
+  - `currency_profit` the currency of calculated profit,
+  - `description` description,
+  - `expiration` expiration, `null` if not applicable,
+  - `group_name` symbol group name,
+  - `high` the highest price of the day in base currency,
+  - `initial_margin` initial margin for 1 lot order, used for profit/margin calculation,
+  - `instant_max_volume` maximum instant volume multiplied by 100 (in lots),
+  - `leverage` symbol leverage,
+  - `long_only` indicates whether the symbol is long only,
+  - `lot_max` maximum size of trade,
+  - `lot_min` minimum size of trade,
+  - `lot_step` a value of minimum step by which the size of trade can be changed (within `lotMin` - `lotMax` range),
+  - `low` the lowest price of the day in base currency,
+  - `margin_hedged` used for profit calculation,
+  - `margin_hedged_strong` for margin calculation,
+  - `margin_maintenance` for margin calculation, `null` if not applicable,
+  - `margin_mode` for margin calculation,
+  - `percentage` percentage,
+  - `pips_precision` number of symbol's pip decimal places,
+  - `precision` number of symbol's price decimal places,
+  - `profit_mode` for profit calculation,
+  - `quote_id` source of price,
+  - `short_selling` indicates whether short selling is allowed on the instrument,
+  - `spread_raw` the difference between raw ask and bid prices,
+  - `spread_table` spread representation,
+  - `starting` `null` if not applicable,
+  - `step_rule_id` appropriate step rule ID from `XtbClient.Connection.get_step_rules/1` command response,
+  - `stops_level` minimal distance (in pips) from the current price where the stopLoss/takeProfit can be set,
+  - `swap_rollover_3_days` time when additional swap is accounted for weekend,
+  - `swap_enable` indicates whether swap value is added to position on end of day,
+  - `swap_long` swwap value for long positions in pips,
+  - `swap_short` swap value for short positions in pips,
+  - `swap_type` type of swap calculated,
+  - `symbol` symbol name,
+  - `tick_size` smallest possible price change, used for profit/margin calculation, `null` if not applicable,
+  - `tick_value` value of smallest possible price change (in base currency), used for profit/margin calculation, `null` if not applicable,
+  - `time` ask & bid tick time,
+  - `time_string` time in string,
+  - `trailing_enabled` indicates whether trailing stop (offset) is applicable to the instrument,
+  - `type` instrument class number.
   """
+
   alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
 
   @type t :: %__MODULE__{

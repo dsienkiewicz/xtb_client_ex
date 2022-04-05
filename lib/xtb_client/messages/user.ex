@@ -1,4 +1,27 @@
 defmodule XtbClient.Messages.UserInfo do
+  @moduledoc """
+  Info about the current user.
+  
+  Parameters:
+  - `company_unit` 	unit the account is assigned to,
+  - `currency` account currency,
+  - `group` group,
+  - `ib_account` indicates whether this account is an IB account,
+  - `leverage_mult` the factor used for margin calculations,
+  - `spread_type` spread type, null if not applicable,
+  - `trailing_stop` indicates whether this account is enabled to use trailing stop.
+  """
+
+  @type t :: %__MODULE__{
+          company_unit: integer(),
+          currency: binary(),
+          group: binary(),
+          ib_account: true | false,
+          leverage_mult: float(),
+          spread_type: binary() | nil,
+          trailing_stop: boolean()
+        }
+
   @enforce_keys [:company_unit, :currency, :group, :ib_account, :leverage_mult, :trailing_stop]
 
   @derive Jason.Encoder

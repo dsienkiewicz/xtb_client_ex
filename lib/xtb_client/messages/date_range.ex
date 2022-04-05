@@ -1,4 +1,13 @@
 defmodule XtbClient.Messages.DateRange do
+  @moduledoc """
+  Info about time range - stores `start` and `end` information as milliseconds in Unix format.
+  """
+
+  @type t :: %__MODULE__{
+          start: integer(),
+          end: integer()
+        }
+
   @enforce_keys [:start, :end]
 
   @derive Jason.Encoder

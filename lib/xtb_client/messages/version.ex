@@ -1,4 +1,8 @@
 defmodule XtbClient.Messages.Version do
+  @type t :: %__MODULE__{
+          version: binary()
+        }
+
   @enforce_keys [:version]
 
   defstruct version: ""

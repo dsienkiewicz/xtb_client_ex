@@ -1,4 +1,13 @@
 defmodule XtbClient.Messages.SymbolVolume do
+  @moduledoc """
+  Info about symbol ticker + volume.
+  """
+
+  @type t :: %__MODULE__{
+          symbol: binary(),
+          volume: number()
+        }
+
   @enforce_keys [:symbol, :volume]
 
   @derive Jason.Encoder

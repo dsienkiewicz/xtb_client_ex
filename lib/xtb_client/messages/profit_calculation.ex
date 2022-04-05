@@ -2,6 +2,25 @@ defmodule XtbClient.Messages.ProfitCalculation do
   defmodule Query do
     alias XtbClient.Messages.{Operation}
 
+    @moduledoc """
+    Info about query for calculation of profit.
+    
+    Parameters:
+    - `closePrice` theoretical close price of order,
+    - `cmd` operation code, see `XtbClient.Messages.Operation`,
+    - `openPrice` theoretical open price of order,
+    - `symbol` symbol,
+    - `volume` volume.
+    """
+
+    @type t :: %__MODULE__{
+            closePrice: number(),
+            cmd: Operation.t(),
+            openPrice: number(),
+            symbol: binary(),
+            volume: number()
+          }
+
     @enforce_keys [:closePrice, :cmd, :openPrice, :symbol, :volume]
 
     @derive Jason.Encoder
@@ -29,6 +48,14 @@ defmodule XtbClient.Messages.ProfitCalculation do
       }
     end
   end
+
+  @moduledoc """
+  Info about the result of profit calculation.
+  """
+
+  @type t :: %__MODULE__{
+          profit: number()
+        }
 
   @enforce_keys [:profit]
 

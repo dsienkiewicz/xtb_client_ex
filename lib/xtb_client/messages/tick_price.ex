@@ -1,6 +1,41 @@
 defmodule XtbClient.Messages.TickPrice do
   alias XtbClient.Messages.QuoteId
 
+  @moduledoc """
+  Info about one tick price.
+  
+  Parameters:
+  - `ask` ask price in base currency,
+  - `ask_volume` number of available lots to buy at given price or `null` if not applicable
+  - `bid` bid price in base currency,
+  - `bid_volume` number of available lots to buy at given price or `null` if not applicable,
+  - `exe_mode` exe mode,
+  - `high` the highest price of the day in base currency,
+  - `level` price level,
+  - `low` the lowest price of the day in base currency,
+  - `quote_id` quote ID or `null` if not applicable,
+  - `spread_raw` the difference between raw ask and bid prices,
+  - `spread_table` spread representation,
+  - `symbol` symbol,
+  - `timestamp` timestamp.
+  """
+
+  @type t :: %__MODULE__{
+          ask: float(),
+          ask_volume: integer() | nil,
+          bid: float(),
+          bid_volume: integer() | nil,
+          exe_mode: any(),
+          high: float(),
+          level: integer(),
+          low: float(),
+          quote_id: integer() | nil,
+          spread_raw: float(),
+          spread_table: float(),
+          symbol: binary(),
+          timestamp: DateTime.t()
+        }
+
   @enforce_keys [
     :ask,
     :ask_volume,

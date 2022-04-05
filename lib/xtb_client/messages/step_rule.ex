@@ -1,6 +1,12 @@
 defmodule XtbClient.Messages.StepRule do
   alias XtbClient.Messages.Step
 
+  @type t :: %__MODULE__{
+          id: integer(),
+          name: binary(),
+          steps: [Step.t()]
+        }
+
   @enforce_keys [:id, :name, :steps]
 
   @derive Jason.Encoder
