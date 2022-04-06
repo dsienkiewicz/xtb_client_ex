@@ -6,17 +6,26 @@ defmodule XtbClient.StreamingSocketTest do
   alias XtbClient.StreamingSocket
 
   setup_all do
-    type = :demo
-    url = System.get_env("XTB_API_URL")
+    Dotenvy.source([
+      ".env.#{Mix.env()}",
+      ".env.#{Mix.env()}.override",
+      System.get_env()
+    ])
 
-    {:ok, mpid} =
-      MainSocket.start_link(%{
-        url: url,
-        user: System.get_env("XTB_API_USERNAME"),
-        password: System.get_env("XTB_API_PASSWORD"),
-        type: type,
-        app_name: "XtbClient"
-      })
+    url = Dotenvy.env!("XTB_API_URL", :string!)
+    user = Dotenvy.env!("XTB_API_USERNAME", :string!)
+    passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
+    type = :demo
+
+    params = %{
+      url: url,
+      user: user,
+      password: passwd,
+      type: :demo,
+      app_name: "XtbClient"
+    }
+
+    {:ok, mpid} = MainSocket.start_link(params)
 
     Process.sleep(1_000)
     MainSocket.stream_session_id(mpid, self())

@@ -5,16 +5,25 @@ defmodule XtbClient.MainSocketTest do
   alias XtbClient.MainSocket
 
   setup_all do
-    {
-      :ok,
-      %{
-        url: System.get_env("XTB_API_URL"),
-        user: System.get_env("XTB_API_USERNAME"),
-        password: System.get_env("XTB_API_PASSWORD"),
-        type: :demo,
-        app_name: "XtbClient"
-      }
+    Dotenvy.source([
+      ".env.#{Mix.env()}",
+      ".env.#{Mix.env()}.override",
+      System.get_env()
+    ])
+
+    url = Dotenvy.env!("XTB_API_URL", :string!)
+    user = Dotenvy.env!("XTB_API_USERNAME", :string!)
+    passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
+
+    params = %{
+      url: url,
+      user: user,
+      password: passwd,
+      type: :demo,
+      app_name: "XtbClient"
     }
+
+    {:ok, params}
   end
 
   test "logs in to account", context do

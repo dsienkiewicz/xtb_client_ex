@@ -30,7 +30,8 @@ defmodule XtbClient.MixProject do
     [
       {:jason, "~> 1.3"},
       {:websockex, "~> 0.4.3"},
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:dotenvy, "~> 0.6.0", only: [:dev, :test]}
     ]
   end
 
@@ -59,10 +60,7 @@ defmodule XtbClient.MixProject do
     [
       "tests.all": ["tests.unit", "tests.integration"],
       "tests.unit": ["test --color"],
-      "tests.integration": [
-        "source .env.dev",
-        "test --color"
-      ]
+      "tests.integration": ["test --color"]
     ]
   end
 end

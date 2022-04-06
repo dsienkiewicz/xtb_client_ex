@@ -50,10 +50,20 @@ defmodule XtbClient.ConnectionTest do
   alias XtbClient.TransactionHelper
 
   setup_all do
+    Dotenvy.source([
+      ".env.#{Mix.env()}",
+      ".env.#{Mix.env()}.override",
+      System.get_env()
+    ])
+
+    url = Dotenvy.env!("XTB_API_URL", :string!)
+    user = Dotenvy.env!("XTB_API_USERNAME", :string!)
+    passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
+
     params = %{
-      url: System.get_env("XTB_API_URL"),
-      user: System.get_env("XTB_API_USERNAME"),
-      password: System.get_env("XTB_API_PASSWORD"),
+      url: url,
+      user: user,
+      password: passwd,
       type: :demo,
       app_name: "XtbClient"
     }
