@@ -1,5 +1,7 @@
 # XtbClient
 
+[![Elixir CI](https://github.com/dsienkiewicz/xtb_client_ex/actions/workflows/elixir.yml/badge.svg?branch=main)](https://github.com/dsienkiewicz/xtb_client_ex/actions/workflows/elixir.yml)
+
 Elixir client for the XTB trading platform.
 
 Library provides simple client written as `GenServer` intended to be started as a process to communicate with XTB server.
