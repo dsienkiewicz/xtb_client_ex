@@ -57,25 +57,27 @@ defmodule XtbClient.StreamingSocket do
   
   Result of the query will be delivered to message mailbox of the `pid` process.
   """
-  @spec subscribe(client(), client(), term(), binary()) :: :ok
-  def subscribe(client, pid, ref, method) do
-    WebSockex.cast(client, {:subscribe, {pid, ref, method}})
+  @spec subscribe(client(), client(), term(), {binary(), binary()}) :: :ok
+  def subscribe(client, pid, response_method, {method, ref}) do
+    WebSockex.cast(client, {:subscribe, {pid, response_method, {method, ref}}})
   end
 
-  @spec subscribe(client(), client(), term(), binary(), map()) :: :ok
-  def subscribe(client, pid, ref, method, params) do
-    WebSockex.cast(client, {:subscribe, {pid, ref, method, params}})
+  @spec subscribe(client(), client(), term(), {binary(), binary()}, map()) :: :ok
+  def subscribe(client, pid, response_method, {method, ref}, params) do
+    WebSockex.cast(client, {:subscribe, {pid, response_method, {method, ref}, params}})
   end
 
   @impl WebSockex
   def handle_cast(
-        {:subscribe, {pid, ref, method}},
+        {:subscribe, {pid, response_method, {method, ref}}},
         %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
       ) do
     last_sub = check_rate(last_sub, actual_rate())
 
     message = encode_streaming_command(method, session_id)
-    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
+
+    subscriptions =
+      Map.put(subscriptions, response_method, {:subscription, pid, response_method, method})
 
     state =
       state
@@ -87,13 +89,15 @@ defmodule XtbClient.StreamingSocket do
 
   @impl WebSockex
   def handle_cast(
-        {:subscribe, {pid, ref, method, params}},
+        {:subscribe, {pid, response_method, {method, ref}, params}},
         %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
       ) do
     last_sub = check_rate(last_sub, actual_rate())
 
     message = encode_streaming_command(method, session_id, params)
-    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
+
+    subscriptions =
+      Map.put(subscriptions, response_method, {:subscription, pid, response_method, method})
 
     state =
       state
@@ -144,13 +148,13 @@ defmodule XtbClient.StreamingSocket do
   end
 
   defp handle_response(
-         %{"command" => command, "data" => data},
+         %{"command" => response_method, "data" => data},
          %{subscriptions: subscriptions} = state
        ) do
-    {:subscription, pid, ^command, method} = Map.get(subscriptions, command)
+    {:subscription, pid, ^response_method, method} = Map.get(subscriptions, response_method)
 
     result = Messages.decode_message(method, data)
-    GenServer.cast(pid, {:stream, method, result})
+    GenServer.cast(pid, {:stream, {method, "ref"}, result})
 
     {:ok, state}
   end

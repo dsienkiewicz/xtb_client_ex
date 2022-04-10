@@ -12,7 +12,7 @@ defmodule StreamListener do
 
   @impl true
   def handle_info(message, state) do
-    IO.inspect(message, label: "Listener handle info")
+    IO.inspect({self(), message}, label: "Listener handle info")
     {:noreply, state}
   end
 end
