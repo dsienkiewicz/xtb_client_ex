@@ -4,6 +4,11 @@ defmodule XtbClient.Messages.ChartLast do
 
     @moduledoc """
     Parameters for last chart query.
+    
+    ## Parameters
+    - `period` an atom of `XtbClient.Messages.Period` type, describing the time interval for the query
+    - `start` start of chart block (rounded down to the nearest interval and excluding)
+    - `symbol` symbol name.
     """
 
     @type t :: %__MODULE__{
@@ -20,10 +25,7 @@ defmodule XtbClient.Messages.ChartLast do
               symbol: ""
 
     @doc """
-    Creates new query with mandatory parameters:
-    - `period` an atom of `XtbClient.Messages.Period` type, describing the time interval for the query
-    - `start` start of chart block (rounded down to the nearest interval and excluding)
-    - `symbol` symbol name.
+    Creates new query with mandatory arguments.
     """
     @spec new(%{
             :period => Period.t(),

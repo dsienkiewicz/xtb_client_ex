@@ -2,7 +2,13 @@ defmodule XtbClient.Messages.SymbolInfos do
   alias XtbClient.Messages.{SymbolInfo}
 
   @moduledoc """
-  Represents a result of query for list of `XtbClient.Messages.SymbolInfo`s.
+  Query result for list of `XtbClient.Messages.SymbolInfo`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getAllSymbols`
   """
 
   @type t :: %__MODULE__{

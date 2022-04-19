@@ -2,6 +2,9 @@ defmodule XtbClient.Messages.Trades do
   defmodule Query do
     @moduledoc """
     Info about the query for trades.
+    
+    ## Parameters
+    - `openedOnly` if true then only opened trades will be returned.
     """
 
     @type t :: %__MODULE__{

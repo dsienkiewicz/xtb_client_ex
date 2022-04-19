@@ -25,7 +25,6 @@ defmodule XtbClient.ConnectionTest do
     Quote,
     Quotations,
     RateInfos,
-    RateInfo,
     ServerTime,
     StepRules,
     StepRule,
@@ -103,13 +102,16 @@ defmodule XtbClient.ConnectionTest do
     assert %RateInfos{} = result
     assert is_number(result.digits)
     assert [elem | _] = result.data
-    assert %RateInfo{} = elem
+    assert %Candle{} = elem
   end
 
   test "get chart range", %{pid: pid} do
     args = %{
-      start: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
-      end: DateTime.utc_now(),
+      range:
+        DateRange.new(%{
+          from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
+          to: DateTime.utc_now()
+        }),
       period: :h1,
       symbol: "EURPLN"
     }
@@ -120,7 +122,7 @@ defmodule XtbClient.ConnectionTest do
     assert %RateInfos{} = result
     assert is_number(result.digits)
     assert [elem | _] = result.data
-    assert %RateInfo{} = elem
+    assert %Candle{} = elem
   end
 
   test "get commission definition", %{pid: pid} do

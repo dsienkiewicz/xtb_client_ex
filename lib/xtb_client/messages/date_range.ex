@@ -14,6 +14,7 @@ defmodule XtbClient.Messages.DateRange do
   defstruct start: nil,
             end: nil
 
+  @spec new(%{from: DateTime.t(), to: DateTime.t()}) :: t()
   def new(%{from: from, to: to}) when not is_nil(from) and not is_nil(to) do
     %__MODULE__{
       start: DateTime.to_unix(from, :millisecond),

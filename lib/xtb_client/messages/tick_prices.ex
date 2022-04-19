@@ -3,9 +3,9 @@ defmodule XtbClient.Messages.TickPrices do
     @moduledoc """
     Info about the query for tick prices.
     
-    Parameters:
+    ## Parameters
     - `level` price level (possible values of level field: -1 => all levels, 0 => base level bid and ask price for instrument, >0 => specified level),
-    - `symbols` Array of symbol names (Strings),
+    - `symbols` array of symbol names,
     - `timestamp` the time from which the most recent tick should be looked for. Historical prices cannot be obtained using this parameter. It can only be used to verify whether a price has changed since the given time.
     """
 
@@ -37,6 +37,16 @@ defmodule XtbClient.Messages.TickPrices do
   end
 
   alias XtbClient.Messages.TickPrice
+
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TickPrice`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getTickPrices`
+  """
 
   @type t :: %__MODULE__{
           data: [TickPrice.t()]

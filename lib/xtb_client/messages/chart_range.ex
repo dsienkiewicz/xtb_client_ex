@@ -1,6 +1,32 @@
 defmodule XtbClient.Messages.ChartRange do
   defmodule Query do
-    alias XtbClient.Messages.Period
+    alias XtbClient.Messages.{DateRange, Period}
+
+    @moduledoc """
+    Parameters for chart range query.
+    
+    ## Parameters
+    - `start` start of chart block (rounded down to the nearest interval and excluding),
+    - `end` end of chart block (rounded down to the nearest interval and excluding),
+    - `period` period, see `XtbClient.Messages.Period`,
+    - `symbol` symbol name,
+    - `ticks` number of ticks needed, this field is optional, please read the description below.
+    
+    ## Ticks
+    Ticks field - if ticks is not set or value is `0`, `getChartRangeRequest` works as before (you must send valid start and end time fields).
+    If ticks value is not equal to `0`, field end is ignored.
+    If ticks `>0` (e.g. `N`) then API returns `N` candles from time start.
+    If ticks `<0` then API returns `N` candles to time start.
+    It is possible for API to return fewer chart candles than set in tick field.
+    """
+
+    @type t :: %__MODULE__{
+            start: integer(),
+            end: integer(),
+            period: Period.t(),
+            symbol: binary(),
+            ticks: integer()
+          }
 
     @enforce_keys [:start, :end, :period, :symbol]
 
@@ -17,11 +43,15 @@ defmodule XtbClient.Messages.ChartRange do
       %{value | ticks: ticks}
     end
 
-    def new(%{start: start, end: end_value, period: period, symbol: symbol})
-        when not is_nil(start) and not is_nil(end_value) and is_atom(period) and is_binary(symbol) do
+    def new(%{
+          range: %DateRange{start: start, end: end_value},
+          period: period,
+          symbol: symbol
+        })
+        when is_atom(period) and is_binary(symbol) do
       %__MODULE__{
-        start: DateTime.to_unix(start, :millisecond),
-        end: DateTime.to_unix(end_value, :millisecond),
+        start: start,
+        end: end_value,
         period: Period.format(period),
         symbol: symbol
       }

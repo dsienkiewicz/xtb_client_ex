@@ -1,5 +1,12 @@
 defmodule XtbClient.Messages.TradeInfos do
   defmodule Query do
+    @moduledoc """
+    Info about query for trade infos.
+    
+    ## Parameters
+    - `orders` array of order IDs.
+    """
+
     @type t :: %__MODULE__{
             orders: [binary()]
           }
@@ -17,6 +24,18 @@ defmodule XtbClient.Messages.TradeInfos do
   end
 
   alias XtbClient.Messages.TradeInfo
+
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TradeInfo`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getTradeRecords`
+  - `getTrades`
+  - `getTradesHistory`
+  """
 
   @type t :: %__MODULE__{
           data: [TradeInfo.t()]

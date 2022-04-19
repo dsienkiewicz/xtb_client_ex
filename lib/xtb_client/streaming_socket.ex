@@ -20,6 +20,15 @@ defmodule XtbClient.StreamingSocket do
   - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
   """
 
+  @doc """
+  Starts a `XtbClient.StreamingSocket` process linked to the calling process.
+  """
+  @spec start_link(%{
+          :stream_session_id => binary(),
+          :type => AccountType.t(),
+          :url => binary | URI.t(),
+          optional(any) => any
+        }) :: GenServer.on_start()
   def start_link(%{url: url, type: type, stream_session_id: _stream_session_id} = state) do
     account_type = AccountType.format_streaming(type)
     uri = URI.merge(url, account_type) |> URI.to_string()
@@ -48,7 +57,7 @@ defmodule XtbClient.StreamingSocket do
   @doc """
   Subscribes `pid` process for messages from `method` query.
   
-    Arguments:
+  ## Arguments
   - `client` pid of the streaming socket process,
   - `pid` pid of the caller awaiting for the result,
   - `ref` unique reference of the query,

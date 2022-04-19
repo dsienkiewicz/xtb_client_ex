@@ -2,6 +2,9 @@ defmodule XtbClient.Messages.TradingHours do
   defmodule Query do
     @moduledoc """
     Info about the query for trading hours.
+    
+    ## Parameters
+    - `symbols` array of symbol names.
     """
 
     @type t :: %__MODULE__{
@@ -21,6 +24,16 @@ defmodule XtbClient.Messages.TradingHours do
   end
 
   alias XtbClient.Messages.TradingHour
+
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TradingHour`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getTradingHours`
+  """
 
   @type t :: %__MODULE__{
           data: [TradingHour.t()]

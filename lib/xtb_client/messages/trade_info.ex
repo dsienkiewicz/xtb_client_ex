@@ -4,7 +4,7 @@ defmodule XtbClient.Messages.TradeInfo do
   @moduledoc """
   Info about the trade that has happened.
   
-  Parameters:
+  ## Parameters
   - `close_price` close price in base currency,
   - `close_time` `null` if order is not closed,
   - `closed` closed,
@@ -198,7 +198,7 @@ defmodule XtbClient.Messages.TradeInfo do
              is_integer(order_opened) and is_integer(order_closed) and is_integer(position) and
              is_number(stop_loss) and
              is_number(storage) and
-             is_binary(symbol) and
+             (is_binary(symbol) or is_nil(symbol)) and
              is_number(take_profit) and
              is_number(volume) do
     %__MODULE__{

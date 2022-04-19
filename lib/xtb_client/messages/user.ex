@@ -2,14 +2,17 @@ defmodule XtbClient.Messages.UserInfo do
   @moduledoc """
   Info about the current user.
   
-  Parameters:
-  - `company_unit` 	unit the account is assigned to,
+  ## Parameters
+  - `company_unit` unit the account is assigned to,
   - `currency` account currency,
-  - `group` group,
+  - `group` group name,
   - `ib_account` indicates whether this account is an IB account,
   - `leverage_mult` the factor used for margin calculations,
-  - `spread_type` spread type, null if not applicable,
+  - `spread_type` spread type, `null` if not applicable,
   - `trailing_stop` indicates whether this account is enabled to use trailing stop.
+  
+  ## Handled Api methods
+  - `getCurrentUserData`
   """
 
   @type t :: %__MODULE__{

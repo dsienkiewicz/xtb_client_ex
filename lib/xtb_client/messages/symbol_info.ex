@@ -2,6 +2,9 @@ defmodule XtbClient.Messages.SymbolInfo do
   defmodule Query do
     @moduledoc """
     Info about the query for symbol info.
+    
+    ## Parameters
+    - `symbol` symbol name.
     """
 
     @type t :: %__MODULE__{
@@ -21,12 +24,14 @@ defmodule XtbClient.Messages.SymbolInfo do
     end
   end
 
+  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
+
   @moduledoc """
-  All information relevant to the symbol of security.
+  Information relevant to the symbol of security.
   
   Please be advised that result values for profit and margin calculation can be used optionally, because server is able to perform all profit/margin calculations for Client application by commands described later in this document.
   
-  Parameters:
+  ## Parameters
   - `ask` ask price in base currency,
   - `bid` bid price in base currency,
   - `category_name` category name,
@@ -54,7 +59,7 @@ defmodule XtbClient.Messages.SymbolInfo do
   - `pips_precision` number of symbol's pip decimal places,
   - `precision` number of symbol's price decimal places,
   - `profit_mode` for profit calculation,
-  - `quote_id` source of price,
+  - `quote_id` source of price, see `XtbClient.Messages.QuoteId`,
   - `short_selling` indicates whether short selling is allowed on the instrument,
   - `spread_raw` the difference between raw ask and bid prices,
   - `spread_table` spread representation,
@@ -73,9 +78,10 @@ defmodule XtbClient.Messages.SymbolInfo do
   - `time_string` time in string,
   - `trailing_enabled` indicates whether trailing stop (offset) is applicable to the instrument,
   - `type` instrument class number.
+  
+  ## Handled Api methods
+  - `getSymbol`
   """
-
-  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
 
   @type t :: %__MODULE__{
           ask: float(),

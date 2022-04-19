@@ -1,6 +1,16 @@
 defmodule XtbClient.Messages.StepRules do
   alias XtbClient.Messages.StepRule
 
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.StepRule`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getStepRules`
+  """
+
   @type t :: %__MODULE__{
           data: [StepRule.t()]
         }

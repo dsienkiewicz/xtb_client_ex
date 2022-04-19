@@ -33,7 +33,8 @@ defmodule XtbClient.Connection do
   so it can mediate all commands and queries from the caller to the connected socket.
   
   For the synchronous operations clients should expect to get results as the function returned value.
-  Example of synchronous call:
+  
+  ## Example of synchronous call
   
   ```
   params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
@@ -46,7 +47,8 @@ defmodule XtbClient.Connection do
   Asynchronous operations, mainly `subscribe_` functions, returns immediately and stores the `pid` of the subscriber, so later it can send the message there.
   Note that each `subscribe_` function expects the `subscriber` as an argument, so `XtbClient.Connection` could serve different types
   of events to different subscribers. Only limitation is that each `subscribe_` function handles only one subscriber.
-  Example of asynchronous call:
+  
+  ## Example of asynchronous call
   
   ```
   defmodule StreamListener do
@@ -126,7 +128,7 @@ defmodule XtbClient.Connection do
   end
 
   @doc """
-  Returns chart info, from start date to the current time.
+  Returns chart info from start date to the current time.
   
   If the chosen period of `XtbClient.Messages.ChartLast.Query` is greater than 1 minute, the last candle returned by the API can change until the end of the period (the candle is being automatically updated every minute).
   
@@ -140,7 +142,7 @@ defmodule XtbClient.Connection do
   Note, that specific PERIOD_ is the lowest (i.e. the most detailed) period, accessible in listed range. For instance, in months range <1-7) you can access periods: PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1.
   Specific data ranges availability is guaranteed, however those ranges may be wider, e.g.: PERIOD_M1 may be accessible for 1.5 months back from now, where 1.0 months is guaranteed.
   
-  Example scenario:
+  ## Example scenario:
   
   * request charts of 5 minutes period, for 3 months time span, back from now;
   * response: you are guaranteed to get 1 month of 5 minutes charts; because, 5 minutes period charts are not accessible 2 months and 3 months back from now
@@ -179,7 +181,7 @@ defmodule XtbClient.Connection do
   @doc """
   Returns calculation of commission and rate of exchange.
   
-  The value is calculated as expected value, and therefore might not be perfectly accurate.
+  The value is calculated as expected value and therefore might not be perfectly accurate.
   """
   @spec get_commission_def(client(), XtbClient.Messages.SymbolVolume.t()) ::
           XtbClient.Messages.CommissionDefinition.t()
@@ -188,7 +190,7 @@ defmodule XtbClient.Connection do
   end
 
   @doc """
-  Returns information about account currency, and account leverage.
+  Returns information about account currency and account leverage.
   """
   @spec get_current_user_data(client()) :: XtbClient.Messages.UserInfo.t()
   def get_current_user_data(pid) do
@@ -216,7 +218,7 @@ defmodule XtbClient.Connection do
   @doc """
   Returns expected margin for given instrument and volume.
   
-  The value is calculated as expected margin value, and therefore might not be perfectly accurate.
+  The value is calculated as expected margin value and therefore might not be perfectly accurate.
   """
   @spec get_margin_trade(client(), XtbClient.Messages.SymbolVolume.t()) ::
           XtbClient.Messages.MarginTrade.t()
@@ -335,9 +337,9 @@ defmodule XtbClient.Connection do
   
   `trade_transaction/2` sends main transaction information to the server.
   
-  ### How to verify that the trade request was accepted?
+  ## How to verify that the trade request was accepted?
   The status field set to 'true' does not imply that the transaction was accepted. It only means, that the server acquired your request and began to process it.
-  To analyse the status of the transaction (for example to verify if it was accepted or rejected) use the `trade_transaction_status/2` command with the order number, that came back with the response of the `trade_transaction/2` command.
+  To analyse the status of the transaction (for example to verify if it was accepted or rejected) use the `trade_transaction_status/2` command with the order number that came back with the response of the `trade_transaction/2` command.
   """
   @spec trade_transaction(client(), XtbClient.Messages.TradeTransaction.Command.t()) ::
           XtbClient.Messages.TradeTransaction.t()

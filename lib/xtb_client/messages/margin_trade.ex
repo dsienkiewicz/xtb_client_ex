@@ -1,10 +1,16 @@
 defmodule XtbClient.Messages.MarginTrade do
   @moduledoc """
   Info about calculated margin in account currency.
+  
+  ## Properties
+  - `margin` value of margin.
+  
+  ## Handled Api methods
+  - `getMarginTrade`
   """
 
   @type t :: %__MODULE__{
-          margin: number()
+          margin: float()
         }
 
   @enforce_keys [:margin]

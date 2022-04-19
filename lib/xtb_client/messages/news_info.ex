@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.NewsInfo do
   @moduledoc """
   Info about recent news.
   
-  Properties:
+  ## Properties
   - `body` body of message,
   - `body_length` body length,
   - `key` news key,

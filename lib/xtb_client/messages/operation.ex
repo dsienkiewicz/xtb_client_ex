@@ -13,7 +13,13 @@ defmodule XtbClient.Messages.Operation do
           | :balance
           | :credit
 
-  def parse(value) when is_integer(value) do
+  @type operation_code :: 0..7
+
+  @doc """
+  Parse an integer number as valid operation atom.
+  """
+  @spec parse(operation_code()) :: t()
+  def parse(value) when value in 0..7 do
     parse_operation(value)
   end
 
@@ -30,6 +36,10 @@ defmodule XtbClient.Messages.Operation do
     end
   end
 
+  @doc """
+  Format operation atom as integer value.
+  """
+  @spec format(t()) :: operation_code()
   def format(operation) when is_atom(operation) do
     format_operation(operation)
   end

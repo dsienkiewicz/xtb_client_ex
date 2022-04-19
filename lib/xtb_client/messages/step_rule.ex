@@ -1,4 +1,13 @@
 defmodule XtbClient.Messages.StepRule do
+  @moduledoc """
+  Info about step rule definition.
+  
+  ## Parameters
+  - `id` step rule ID,
+  - `name` step rule name,
+  - `steps` array of `XtbClient.Messages.Step`s.
+  """
+
   alias XtbClient.Messages.Step
 
   @type t :: %__MODULE__{

@@ -1,8 +1,15 @@
 defmodule XtbClient.Messages.QuoteId do
-  @type t :: :fixed | :float | :depth | :cross | :five | :six
-  @type quote_number :: 1 | 2 | 3 | 4 | 5 | 6
+  @moduledoc """
+  Atoms representing quote ID.
+  """
 
-  @spec parse(quote_number()) :: t()
+  @type t :: :fixed | :float | :depth | :cross | :five | :six
+  @type quote_code :: 1 | 2 | 3 | 4 | 5 | 6
+
+  @doc """
+  Parse an integer number as valid atom for quote ID.
+  """
+  @spec parse(quote_code()) :: t()
   def parse(value) when is_integer(value) and value in [1, 2, 3, 4, 5, 6] do
     parse_quote_id(value)
   end

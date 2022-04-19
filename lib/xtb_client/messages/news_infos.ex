@@ -1,6 +1,16 @@
 defmodule XtbClient.Messages.NewsInfos do
   alias XtbClient.Messages.NewsInfo
 
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.NewsInfo`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getNews`
+  """
+
   @type t :: %__MODULE__{
           data: [XtbClient.Messages.NewsInfo.t()]
         }

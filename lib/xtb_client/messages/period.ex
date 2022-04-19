@@ -1,9 +1,9 @@
 defmodule XtbClient.Messages.Period do
-  @typedoc """
-  Specifies time interval - counted in minutes.
+  @moduledoc """
+  Specifies time interval - counted in multiples of minute.
   """
-  @type t :: :m1 | :m5 | :m15 | :m30 | :h1 | :h4 | :d1 | :w1 | :mn1
 
+  @type t :: :m1 | :m5 | :m15 | :m30 | :h1 | :h4 | :d1 | :w1 | :mn1
   @type minute_period :: 1 | 5 | 15 | 30 | 60 | 240 | 1440 | 10080 | 43200
 
   @doc """
