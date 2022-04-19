@@ -42,6 +42,7 @@ defmodule XtbClient.MainSocket do
       state
       |> Map.put(:queries, %{})
       |> Map.put(:last_query, actual_rate())
+      |> IO.inspect(label: "main socket state")
 
     WebSockex.start_link(uri, __MODULE__, state)
   end

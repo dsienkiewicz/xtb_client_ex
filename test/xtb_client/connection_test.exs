@@ -1,5 +1,3 @@
-Code.require_file("transaction_helper.exs", __DIR__)
-
 defmodule XtbClient.ConnectionTest do
   use ExUnit.Case, async: true
   doctest XtbClient.Connection
@@ -46,7 +44,7 @@ defmodule XtbClient.ConnectionTest do
     Version
   }
 
-  alias XtbClient.TransactionHelper
+  alias XtbClient.TestUtils.{CertificatesHelper, TransactionHelper}
 
   setup_all do
     Dotenvy.source([
@@ -59,12 +57,23 @@ defmodule XtbClient.ConnectionTest do
     user = Dotenvy.env!("XTB_API_USERNAME", :string!)
     passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
 
+    cert =
+      CertificatesHelper.decode_der_certificate(
+        "C:\\Users\\daniel.sienkiewicz\\Downloads\\xtb-root.cer"
+      )
+      |> IO.inspect(label: "cert")
+
     params = %{
       url: url,
       user: user,
       password: passwd,
       type: :demo,
-      app_name: "XtbClient"
+      app_name: "XtbClient",
+      # cacerts: [cert],
+      cacertfile: "C:\\Users\\daniel.sienkiewicz\\Downloads\\xtb-root-pem.cer" |> to_charlist(),
+      verify: :verify_peer,
+      server_name_indication: to_charlist("ws.xtb.com"),
+      insecure: false
     }
 
     {:ok, pid} = Connection.start_link(params)

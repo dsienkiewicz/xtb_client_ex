@@ -17,12 +17,20 @@ defmodule XtbClient.StreamingSocketTest do
     passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
     type = :demo
 
+    cert_file =
+      Path.join(["C:\\Users\\daniel.sienkiewicz\\Downloads", "xtb.cer"])
+      |> File.read!()
+
+    {:Certificate, cert, _, _} = :public_key.der_decode(:Certificate, cert_file)
+
     params = %{
       url: url,
       user: user,
       password: passwd,
       type: :demo,
-      app_name: "XtbClient"
+      app_name: "XtbClient",
+      cacerts: [cert],
+      insecure: false
     }
 
     {:ok, mpid} = MainSocket.start_link(params)
