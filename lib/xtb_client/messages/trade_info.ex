@@ -42,7 +42,7 @@ defmodule XtbClient.Messages.TradeInfo do
           operation: integer(),
           comment: binary(),
           commission: float() | nil,
-          custom_comment: binary(),
+          custom_comment: binary() | nil,
           digits: integer(),
           expiration: DateTime.t() | nil,
           margin_rate: float(),
@@ -190,7 +190,6 @@ defmodule XtbClient.Messages.TradeInfo do
              is_boolean(closed) and
              is_integer(operation) and
              is_number(commission) and
-             is_binary(custom_comment) and
              is_integer(digits) and
              is_number(margin_rate) and
              is_integer(offset) and
@@ -198,7 +197,6 @@ defmodule XtbClient.Messages.TradeInfo do
              is_integer(order_opened) and is_integer(order_closed) and is_integer(position) and
              is_number(stop_loss) and
              is_number(storage) and
-             (is_binary(symbol) or is_nil(symbol)) and
              is_number(take_profit) and
              is_number(volume) do
     %__MODULE__{
