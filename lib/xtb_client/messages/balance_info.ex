@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.BalanceInfo do
   @moduledoc """
   Info about current account indicators.
   
-  Parameters:
+  ## Parameters
   - `balance` balance in account currency,
   - `cash_stock_value` value of stock in cash,
   - `credit` credit,
@@ -14,20 +14,24 @@ defmodule XtbClient.Messages.BalanceInfo do
   - `margin_level` margin level percentage,
   - `stock_lock` stock lock,
   - `stock_value` stock value.
+  
+  ## Handled Api methods
+  - `getBalance`
+  - `getMarginLevel`
   """
 
   @type t :: %__MODULE__{
-          balance: number(),
-          cash_stock_value: number(),
-          credit: number(),
+          balance: float(),
+          cash_stock_value: float(),
+          credit: float(),
           currency: binary(),
-          equity: number(),
-          equity_fx: number(),
-          margin: number(),
-          margin_free: number(),
-          margin_level: number(),
-          stock_lock: number(),
-          stock_value: number()
+          equity: float(),
+          equity_fx: float(),
+          margin: float(),
+          margin_free: float(),
+          margin_level: float(),
+          stock_lock: float(),
+          stock_value: float()
         }
 
   @enforce_keys [

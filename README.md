@@ -10,18 +10,7 @@ As all regular OTP processes, the process for `XtbClient.Connection` could be su
 
 ## Installation
 
-Package could be added as a link to GitHub repo:
-
-```elixir
-def deps do
-  [
-    {:xtb_client_ex, github: "https://github.com/dsienkiewicz/xtb_client_ex"}    
-  ]
-end
-```
-
-When [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `xtb_client_ex` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `xtb_client_ex` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -127,12 +116,3 @@ Listener handle info: {:ok,
  }}
  ...
 ```
-
-## TODO:
-* Generate documentation
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/xtb_client_ex](https://hexdocs.pm/xtb_client_ex).
-
-* Publish to HexPM

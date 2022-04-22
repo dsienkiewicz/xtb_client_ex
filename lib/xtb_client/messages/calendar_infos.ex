@@ -2,7 +2,13 @@ defmodule XtbClient.Messages.CalendarInfos do
   alias XtbClient.Messages.{CalendarInfo}
 
   @moduledoc """
-  Represents result of query for list of `XtbClient.Messages.CalendarInfo`s.
+  Query result for list of `XtbClient.Messages.CalendarInfo`s.
+  
+  ## Parameters
+  - `data` array or results.
+  
+  ## Handled Api methods
+  - `getCalendar`
   """
 
   @type t :: %__MODULE__{

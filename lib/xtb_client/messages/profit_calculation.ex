@@ -5,20 +5,20 @@ defmodule XtbClient.Messages.ProfitCalculation do
     @moduledoc """
     Info about query for calculation of profit.
     
-    Parameters:
+    ## Parameters
     - `closePrice` theoretical close price of order,
     - `cmd` operation code, see `XtbClient.Messages.Operation`,
     - `openPrice` theoretical open price of order,
-    - `symbol` symbol,
-    - `volume` volume.
+    - `symbol` symbol name,
+    - `volume` volume in lots.
     """
 
     @type t :: %__MODULE__{
-            closePrice: number(),
+            closePrice: float(),
             cmd: Operation.t(),
-            openPrice: number(),
+            openPrice: float(),
             symbol: binary(),
-            volume: number()
+            volume: float()
           }
 
     @enforce_keys [:closePrice, :cmd, :openPrice, :symbol, :volume]
@@ -50,11 +50,17 @@ defmodule XtbClient.Messages.ProfitCalculation do
   end
 
   @moduledoc """
-  Info about the result of profit calculation.
+  Query result for profit calculation.
+  
+  ## Parameters
+  - `profit` profit in account currency.
+  
+  ## Handled Api methods
+  - `getProfitCalculation`
   """
 
   @type t :: %__MODULE__{
-          profit: number()
+          profit: float()
         }
 
   @enforce_keys [:profit]

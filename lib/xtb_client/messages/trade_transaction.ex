@@ -5,12 +5,12 @@ defmodule XtbClient.Messages.TradeTransaction do
     @moduledoc """
     Info about command to trade the transaction.
     
-    Parameters:
+    ## Parameters
     - `cmd` operation code, see `XtbClient.Messages.Operation`,
     - `customComment` the value the customer may provide in order to retrieve it later,
     - `expiration` pending order expiration time,
     - `offset` trailing offset,
-    - `order` 0 or position number for closing/modifications,
+    - `order` `0` or position number for closing/modifications,
     - `price` trade price,
     - `sl` stop loss,
     - `tp` take profit,
@@ -101,7 +101,11 @@ defmodule XtbClient.Messages.TradeTransaction do
   @moduledoc """
   Info about realized trade transaction.
   
-  Holds info about order number, needed later for verification about order status.
+  ## Parameters
+  - `order` holds info about order number, needed later for verification about order status.
+  
+  ## Handled Api methods
+  - `tradeTransaction`
   """
 
   @type t :: %__MODULE__{

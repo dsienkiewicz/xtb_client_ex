@@ -1,6 +1,28 @@
 defmodule XtbClient.Messages.TradeStatus do
   alias XtbClient.Messages.TransactionStatus
 
+  @moduledoc """
+  Info about the actual status of sent trade request.
+  
+  ## Parameters
+  - `custom_comment` the value the customer may provide in order to retrieve it later,
+  - `message` message, can be `null`,
+  - `order` unique order number,
+  - `price` price in base currency,
+  - `status` request status code, see `XtbClient.Messages.TransactionStatus`.
+  
+  ## Handled Api methods
+  - `getTradeStatus`
+  """
+
+  @type t :: %__MODULE__{
+          custom_comment: binary(),
+          message: binary(),
+          order: integer(),
+          price: float(),
+          status: TransactionStatus.t()
+        }
+
   defstruct custom_comment: "",
             message: nil,
             order: 0,

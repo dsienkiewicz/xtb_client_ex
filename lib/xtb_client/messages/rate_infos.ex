@@ -1,13 +1,21 @@
 defmodule XtbClient.Messages.RateInfos do
-  alias XtbClient.Messages.{RateInfo}
+  alias XtbClient.Messages.{Candle}
 
   @moduledoc """
-  Represents a result of query for list of `XtbClient.Messages.RateInfo`s.
+  Query result for list of `XtbClient.Messages.Candle`s.
+  
+  ## Parameters
+  - `digits` number of decimal places,
+  - `data` array of results.
+  
+  ## Handled Api methods
+  - `getChartLastRequest`
+  - `getChartRangeRequest`
   """
 
   @type t :: %__MODULE__{
           digits: integer(),
-          data: [RateInfo.t()]
+          data: [Candle.t()]
         }
 
   @enforce_keys [:digits, :data]
@@ -25,7 +33,7 @@ defmodule XtbClient.Messages.RateInfos do
       digits: digits,
       data:
         rate_infos
-        |> Enum.map(&RateInfo.new(&1, digits))
+        |> Enum.map(&Candle.new(&1, digits))
     }
   end
 

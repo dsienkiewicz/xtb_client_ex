@@ -21,6 +21,17 @@ defmodule XtbClient.MainSocket do
   - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
   """
 
+  @doc """
+  Starts a `XtbClient.MainSocket` process linked to the calling process.
+  """
+  @spec start_link(%{
+          :app_name => binary(),
+          :password => binary(),
+          :type => AccountType.t(),
+          :url => binary | URI.t(),
+          :user => binary(),
+          optional(any) => any
+        }) :: GenServer.on_start()
   def start_link(
         %{url: url, type: type, user: _user, password: _password, app_name: _app_name} = state
       ) do
@@ -65,7 +76,7 @@ defmodule XtbClient.MainSocket do
   @doc """
   Casts query to get streaming session ID.
   
-  Arguments:
+  ## Arguments
   - `client` pid of the main socket process,
   - `pid` pid of the caller awaiting for the result.
   
@@ -81,7 +92,7 @@ defmodule XtbClient.MainSocket do
   
   Might be also used to send command to the backend server.
   
-  Arguments:
+  ## Arguments
   - `client` pid of the main socket process,
   - `pid` pid of the caller awaiting for the result,
   - `ref` unique reference of the query,

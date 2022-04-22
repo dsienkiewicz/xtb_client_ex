@@ -1,8 +1,15 @@
 defmodule XtbClient.Messages.ProfitMode do
-  @type t :: :forex | :cfd
-  @type proft_number :: 5 | 6
+  @moduledoc """
+  Atoms representing profit mode.
+  """
 
-  @spec parse(proft_number()) :: t()
+  @type t :: :forex | :cfd
+  @type proft_code :: 5 | 6
+
+  @doc """
+  Parse an integer value to valid atom of profit mode.
+  """
+  @spec parse(proft_code()) :: t()
   def parse(value) when is_number(value) and value in [5, 6] do
     parse_profit_mode(value)
   end

@@ -1,6 +1,8 @@
 defmodule XtbClient.Messages.CalendarInfo do
   @moduledoc """
-  Calendar event, described by properties:
+  Calendar event.
+  
+  ## Parameters
   - `country` two letter country code,
   - `current` market value (current), empty before time of release of this value (time from "time" record),
   - `forecast` forecasted value,

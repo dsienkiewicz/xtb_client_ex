@@ -1,9 +1,16 @@
 defmodule XtbClient.Messages.MarginMode do
-  @type t :: :forex | :cfd_leveraged | :cfd | :hundred_and_four
-  @type margin_number :: 101 | 102 | 103 | 104
+  @moduledoc """
+  Atoms representing margin mode.
+  """
 
-  @spec parse(margin_number()) :: t()
-  def parse(value) when is_number(value) and value > 0 do
+  @type t :: :forex | :cfd_leveraged | :cfd | :hundred_and_four
+  @type margin_code :: 101 | 102 | 103 | 104
+
+  @doc """
+  Parse an integer value as a valid atom for margin mode.
+  """
+  @spec parse(margin_code()) :: t()
+  def parse(value) when is_number(value) and value in [101, 102, 103, 104] do
     parse_margin_mode(value)
   end
 

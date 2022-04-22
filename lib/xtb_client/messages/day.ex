@@ -12,6 +12,12 @@ defmodule XtbClient.Messages.Day do
           | :saturday
           | :sunday
 
+  @type day_code :: 1..7
+
+  @doc """
+  Parse an integer value as a valid atom representing day of week.
+  """
+  @spec parse(day_code()) :: t()
   def parse(value) when is_integer(value) and value in 1..7 do
     parse_day(value)
   end

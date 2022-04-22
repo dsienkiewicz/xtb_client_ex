@@ -1,4 +1,18 @@
 defmodule XtbClient.Messages.KeepAlive do
+  @moduledoc """
+  Info representing response from the server sent to keep alive command.
+  
+  ## Parameters
+  - `timestamp` current timestamp.
+  
+  ## Handled Api methods
+  - `getKeepAlive`
+  """
+
+  @type t :: %__MODULE__{
+          timestamp: DateTime.t()
+        }
+
   @enforce_keys [:timestamp]
 
   @derive Jason.Encoder
