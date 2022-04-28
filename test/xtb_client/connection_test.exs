@@ -451,7 +451,7 @@ defmodule XtbClient.ConnectionTest do
 
     order_id = TransactionHelper.open_trade(pid, buy_args)
 
-    assert_receive {:ok, %TradeInfo{}}, @default_wait_time
+    assert_receive {:ok, %TradeInfo{}}, 2 * @default_wait_time
 
     close_args = %{
       operation: :buy,
@@ -466,7 +466,7 @@ defmodule XtbClient.ConnectionTest do
 
     TransactionHelper.close_trade(pid, order_id, close_args)
 
-    assert_receive {:ok, %TradeInfo{}}, @default_wait_time
+    assert_receive {:ok, %TradeInfo{}}, 2 * @default_wait_time
   end
 
   test "subscribe to trade status", %{pid: pid} do
