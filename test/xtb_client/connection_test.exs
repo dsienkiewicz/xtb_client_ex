@@ -437,6 +437,7 @@ defmodule XtbClient.ConnectionTest do
     assert_receive {:ok, %TickPrice{}}, @default_wait_time
   end
 
+  @tag timeout: 2 * @default_wait_time
   test "subscribe to get trades", %{pid: pid} do
     Connection.subscribe_get_trades(pid, self())
 
