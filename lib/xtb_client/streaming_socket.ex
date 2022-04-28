@@ -104,6 +104,7 @@ defmodule XtbClient.StreamingSocket do
       |> Map.put(:last_sub, last_sub)
 
     encoded_message = encode_streaming_command({method, params}, session_id)
+
     {:reply, {:text, encoded_message}, state}
   end
 
