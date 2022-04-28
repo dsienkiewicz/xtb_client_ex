@@ -77,14 +77,14 @@ defmodule XtbClient.MainSocket do
   Casts query to get streaming session ID.
   
   ## Arguments
-  - `client` pid of the main socket process,
-  - `pid` pid of the caller awaiting for the result.
+  - `server` pid of the main socket process,
+  - `caller` pid of the caller awaiting for the result.
   
-  Result of the query will be delivered to message mailbox of the `pid` process.
+  Result of the query will be delivered to message mailbox of the `caller` process.
   """
   @spec stream_session_id(client(), client()) :: :ok
-  def stream_session_id(client, pid) do
-    WebSockex.cast(client, {:stream_session_id, pid})
+  def stream_session_id(server, caller) do
+    WebSockex.cast(server, {:stream_session_id, caller})
   end
 
   @doc """
@@ -93,43 +93,43 @@ defmodule XtbClient.MainSocket do
   Might be also used to send command to the backend server.
   
   ## Arguments
-  - `client` pid of the main socket process,
-  - `pid` pid of the caller awaiting for the result,
+  - `server` pid of the main socket process,
+  - `caller` pid of the caller awaiting for the result,
   - `ref` unique reference of the query,
   - `method` name of the query method,
   - `params` [optional] arguments of the `method`.
   
-  Result of the query will be delivered to message mailbox of the `pid` process.
+  Result of the query will be delivered to message mailbox of the `caller` process.
   """
   @spec query(client(), client(), term(), binary()) :: :ok
-  def query(client, pid, ref, method) do
-    WebSockex.cast(client, {:query, {pid, ref, method}})
+  def query(server, caller, ref, method) do
+    WebSockex.cast(server, {:query, {caller, ref, method}})
   end
 
   @spec query(client(), client(), term(), binary(), map()) :: :ok
-  def query(client, pid, ref, method, params) do
-    WebSockex.cast(client, {:query, {pid, ref, method, params}})
+  def query(server, caller, ref, method, params) do
+    WebSockex.cast(server, {:query, {caller, ref, method, params}})
   end
 
   @impl WebSockex
   def handle_cast(
-        {:stream_session_id, pid},
+        {:stream_session_id, caller},
         %{stream_session_id: result} = state
       ) do
-    GenServer.cast(pid, {:stream_session_id, result})
+    GenServer.cast(caller, {:stream_session_id, result})
 
     {:ok, state}
   end
 
   @impl WebSockex
   def handle_cast(
-        {:query, {pid, ref, method}},
+        {:query, {caller, ref, method}},
         %{queries: queries, last_query: last_query} = state
       ) do
     last_query = check_rate(last_query, actual_rate())
 
     message = encode_command(method, ref)
-    queries = Map.put(queries, ref, {:query, pid, ref, method})
+    queries = Map.put(queries, ref, {:query, caller, ref, method})
 
     state =
       state
@@ -141,13 +141,13 @@ defmodule XtbClient.MainSocket do
 
   @impl WebSockex
   def handle_cast(
-        {:query, {pid, ref, method, params}},
+        {:query, {caller, ref, method, params}},
         %{queries: queries, last_query: last_query} = state
       ) do
     last_query = check_rate(last_query, actual_rate())
 
     message = encode_command(method, params, ref)
-    queries = Map.put(queries, ref, {:query, pid, ref, method})
+    queries = Map.put(queries, ref, {:query, caller, ref, method})
 
     state =
       state
@@ -218,12 +218,12 @@ defmodule XtbClient.MainSocket do
          %{"status" => true, "returnData" => data, "customTag" => ref},
          %{queries: queries} = state
        ) do
-    {{:query, pid, ^ref, method}, queries} = Map.pop(queries, ref)
-    state = Map.put(state, :queries, queries)
+    {{:query, caller, ^ref, method}, queries} = Map.pop(queries, ref)
 
     result = Messages.decode_message(method, data)
-    GenServer.cast(pid, {:response, ref, result})
+    GenServer.cast(caller, {:response, ref, result})
 
+    state = Map.put(state, :queries, queries)
     {:ok, state}
   end
 

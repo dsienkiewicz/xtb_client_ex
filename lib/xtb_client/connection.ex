@@ -1,7 +1,7 @@
 defmodule XtbClient.Connection do
   use GenServer
 
-  alias XtbClient.{MainSocket, StreamingSocket}
+  alias XtbClient.{MainSocket, StreamingSocket, StreamingMessage}
 
   alias XtbClient.Messages.{
     Candles,
@@ -55,7 +55,8 @@ defmodule XtbClient.Connection do
     use GenServer
   
     def start_link(args) do
-      GenServer.start_link(__MODULE__, args, name: __MODULE__)
+      name = Map.get(args, "name") |> String.to_atom()
+      GenServer.start_link(__MODULE__, args, name: name)
     end
   
     @impl true
@@ -65,17 +66,18 @@ defmodule XtbClient.Connection do
   
     @impl true
     def handle_info(message, state) do
-      IO.inspect(message, label: "Listener handle info")
+      IO.inspect({self(), message}, label: "Listener handle info")
       {:noreply, state}
     end
   end
   
+  
   params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
   {:ok, cpid} = XtbClient.Connection.start_link(params)
-  {:ok, lpid} = StreamListener.start_link(%{})
   
   args = %{symbol: "LITECOIN"}
   query = XtbClient.Messages.Quotations.Query.new(args)
+  {:ok, lpid} = StreamListener.start_link(%{"name" => args.symbol})
   XtbClient.Connection.subscribe_get_tick_prices(cpid, lpid, query)
   # expect to see logs from StreamListener process with tick pricess logged
   ```
@@ -360,47 +362,47 @@ defmodule XtbClient.Connection do
   end
 
   def subscribe_get_balance(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getBalance", "balance", {subscriber, ref}})
+    GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getBalance", "balance")}})
   end
 
   def subscribe_get_candles(pid, subscriber, %Candles.Query{} = params) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getCandles", "candle", {subscriber, ref}, params})
+    GenServer.cast(
+      pid,
+      {:subscribe, {subscriber, StreamingMessage.new("getCandles", "candle", params)}}
+    )
   end
 
   def subscribe_keep_alive(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getKeepAlive", "keepAlive", {subscriber, ref}})
+    GenServer.cast(
+      pid,
+      {:subscribe, {subscriber, StreamingMessage.new("getKeepAlive", "keepAlive")}}
+    )
   end
 
   def subscribe_get_news(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getNews", "news", {subscriber, ref}})
+    GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getNews", "news")}})
   end
 
   def subscribe_get_profits(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getProfits", "profit", {subscriber, ref}})
+    GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getProfits", "profit")}})
   end
 
   def subscribe_get_tick_prices(pid, subscriber, %Quotations.Query{} = params) do
-    ref = inspect(make_ref())
-
     GenServer.cast(
       pid,
-      {:subscribe, "getTickPrices", "tickPrices", {subscriber, ref}, params}
+      {:subscribe, {subscriber, StreamingMessage.new("getTickPrices", "tickPrices", params)}}
     )
   end
 
   def subscribe_get_trades(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getTrades", "trade", {subscriber, ref}})
+    GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getTrades", "trade")}})
   end
 
   def subscribe_get_trade_status(pid, subscriber) do
-    ref = inspect(make_ref())
-    GenServer.cast(pid, {:subscribe, "getTradeStatus", "tradeStatus", {subscriber, ref}})
+    GenServer.cast(
+      pid,
+      {:subscribe, {subscriber, StreamingMessage.new("getTradeStatus", "tradeStatus")}}
+    )
   end
 
   @impl true
@@ -446,12 +448,15 @@ defmodule XtbClient.Connection do
 
   @impl true
   def handle_cast(
-        {:subscribe, method, response_method, {subscriber, ref}} = _message,
+        {:subscribe,
+         {subscriber, %StreamingMessage{method: method, params: params} = streaming_message}} =
+          _message,
         %{spid: spid, subscribers: subscribers} = state
       ) do
-    StreamingSocket.subscribe(spid, self(), response_method, {method, ref})
+    StreamingSocket.subscribe(spid, self(), streaming_message)
 
-    subscribers = Map.put(subscribers, {method, ref}, subscriber)
+    token = StreamingMessage.encode_token(method, params)
+    subscribers = Map.put(subscribers, token, subscriber)
     state = %{state | subscribers: subscribers}
 
     {:noreply, state}
@@ -459,23 +464,10 @@ defmodule XtbClient.Connection do
 
   @impl true
   def handle_cast(
-        {:subscribe, method, response_method, {subscriber, ref}, params} = _message,
-        %{spid: spid, subscribers: subscribers} = state
-      ) do
-    StreamingSocket.subscribe(spid, self(), response_method, {method, ref}, params)
-
-    subscribers = Map.put(subscribers, {method, ref}, subscriber)
-    state = %{state | subscribers: subscribers}
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast(
-        {:stream, {method, ref}, result} = _message,
+        {:stream_result, {token, result}} = _message,
         %{subscribers: subscribers} = state
       ) do
-    subscriber = Map.get(subscribers, {method, ref})
+    subscriber = Map.get(subscribers, token)
     send(subscriber, {:ok, result})
 
     {:noreply, state}

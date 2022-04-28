@@ -2,7 +2,8 @@ defmodule StreamListener do
   use GenServer
 
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+    name = Map.get(args, "name") |> String.to_atom()
+    GenServer.start_link(__MODULE__, args, name: name)
   end
 
   @impl true
