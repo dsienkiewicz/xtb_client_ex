@@ -361,10 +361,25 @@ defmodule XtbClient.Connection do
     GenServer.call(pid, {"tradeTransactionStatus", params})
   end
 
+  @doc """
+  Allows to get actual account indicators values in real-time, as soon as they are available in the system.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.BalanceInfo` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_balance(client(), client()) :: :ok
   def subscribe_get_balance(pid, subscriber) do
     GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getBalance", "balance")}})
   end
 
+  @doc """
+  Subscribes for API chart candles.
+  The interval of every candle is 1 minute. A new candle arrives every minute.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.Candle` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_candles(client(), client(), XtbClient.Messages.Candles.Query.t()) :: :ok
   def subscribe_get_candles(pid, subscriber, %Candles.Query{} = params) do
     GenServer.cast(
       pid,
@@ -372,6 +387,14 @@ defmodule XtbClient.Connection do
     )
   end
 
+  @doc """
+  Subscribes for 'keep alive' messages.
+  A new 'keep alive' message is sent by the API every 3 seconds.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.KeepAlive` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_keep_alive(client(), client()) :: :ok
   def subscribe_keep_alive(pid, subscriber) do
     GenServer.cast(
       pid,
@@ -379,14 +402,38 @@ defmodule XtbClient.Connection do
     )
   end
 
+  @doc """
+  Subscribes for news.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.NewsInfo` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_news(client(), client()) :: :ok
   def subscribe_get_news(pid, subscriber) do
     GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getNews", "news")}})
   end
 
+  @doc """
+  Subscribes for profits.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.ProfitInfo` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_profits(client(), client()) :: :ok
   def subscribe_get_profits(pid, subscriber) do
     GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getProfits", "profit")}})
   end
 
+  @doc """
+  Establishes subscription for quotations and allows to obtain the relevant information in real-time, as soon as it is available in the system.
+  The `subscribe_get_tick_prices/3` command can be invoked many times for the same symbol, but only one subscription for a given symbol will be created.
+  Please beware that when multiple records are available, the order in which they are received is not guaranteed.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.TickPrice` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_tick_prices(client(), client(), XtbClient.Messages.Quotations.Query.t()) ::
+          :ok
   def subscribe_get_tick_prices(pid, subscriber, %Quotations.Query{} = params) do
     GenServer.cast(
       pid,
@@ -394,10 +441,26 @@ defmodule XtbClient.Connection do
     )
   end
 
+  @doc """
+  Establishes subscription for user trade status data and allows to obtain the relevant information in real-time, as soon as it is available in the system.
+  Please beware that when multiple records are available, the order in which they are received is not guaranteed.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.TradeInfo` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_trades(client(), client()) :: :ok
   def subscribe_get_trades(pid, subscriber) do
     GenServer.cast(pid, {:subscribe, {subscriber, StreamingMessage.new("getTrades", "trade")}})
   end
 
+  @doc """
+  Allows to get status for sent trade requests in real-time, as soon as it is available in the system.
+  Please beware that when multiple records are available, the order in which they are received is not guaranteed.
+  
+  Operation is asynchronous, so the immediate response is an `:ok` atom.
+  When the new data are available, the `XtbClient.Messages.TradeStatus` struct is sent to the `subscriber` process.
+  """
+  @spec subscribe_get_trade_status(client(), client()) :: :ok
   def subscribe_get_trade_status(pid, subscriber) do
     GenServer.cast(
       pid,
