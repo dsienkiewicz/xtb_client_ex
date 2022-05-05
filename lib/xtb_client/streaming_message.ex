@@ -18,15 +18,15 @@ defmodule XtbClient.StreamingMessage do
     }
   end
 
-  def encode_token("getTrades" = method_name, _params) do
+  def encode_token(%__MODULE__{method: "getTrades" = method_name}) do
     {:method, method_name}
   end
 
-  def encode_token(method_name, %{symbol: symbol} = _params) do
+  def encode_token(%__MODULE__{method: method_name, params: %{symbol: symbol}}) do
     {:hashed_params, method_name, symbol}
   end
 
-  def encode_token(method_name, _) do
+  def encode_token(%__MODULE__{method: method_name}) do
     {:method, method_name}
   end
 

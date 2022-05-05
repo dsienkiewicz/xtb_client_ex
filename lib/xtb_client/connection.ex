@@ -448,14 +448,12 @@ defmodule XtbClient.Connection do
 
   @impl true
   def handle_cast(
-        {:subscribe,
-         {subscriber, %StreamingMessage{method: method, params: params} = streaming_message}} =
-          _message,
+        {:subscribe, {subscriber, %StreamingMessage{} = streaming_message}} = _message,
         %{spid: spid, subscribers: subscribers} = state
       ) do
     StreamingSocket.subscribe(spid, self(), streaming_message)
 
-    token = StreamingMessage.encode_token(method, params)
+    token = StreamingMessage.encode_token(streaming_message)
     subscribers = Map.put(subscribers, token, subscriber)
     state = %{state | subscribers: subscribers}
 

@@ -81,12 +81,12 @@ defmodule XtbClient.StreamingSocket do
             method: method,
             response_method: response_method,
             params: params
-          } = _message}},
+          } = message}},
         %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
       ) do
     last_sub = check_rate(last_sub, actual_rate())
 
-    token = StreamingMessage.encode_token(method, params)
+    token = StreamingMessage.encode_token(message)
 
     subscriptions =
       Map.update(
@@ -155,7 +155,10 @@ defmodule XtbClient.StreamingSocket do
     {method, method_subs} = Map.get(subscriptions, response_method)
     result = Messages.decode_message(method, data)
 
-    token = StreamingMessage.encode_token(method, result)
+    token =
+      StreamingMessage.new(method, response_method, result)
+      |> StreamingMessage.encode_token()
+
     caller = Map.get(method_subs, token)
 
     GenServer.cast(caller, {:stream_result, {token, result}})
