@@ -34,13 +34,13 @@ params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<
 ```elixir
 Code.require_file("./examples/stream_listener.ex")
 
-{:ok, lpid} = StreamListener.start_link(%{})
 params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
 args = %{symbol: "LITECOIN"}
 query = XtbClient.Messages.Quotations.Query.new(args)
-XtbClient.Connection.subscribe_get_tick_prices(cpid, lpid, query)
+{:ok, litecoin} = StreamListener.start_link(%{"name" => args.symbol})
+XtbClient.Connection.subscribe_get_tick_prices(cpid, litecoin, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.TickPrice{
@@ -81,14 +81,13 @@ Listener handle info: {:ok,
 ```elixir
 Code.require_file("./examples/stream_listener.ex")
 
-{ok, lpid} = StreamListener.start_link(%{})
-
 params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
 args = "LITECOIN"
 query = XtbClient.Messages.Candles.Query.new(args)
-XtbClient.Connection.subscribe_get_candles(cpid, lpid, query)
+{:ok, litecoin} = StreamListener.start_link(%{"name" => args})
+XtbClient.Connection.subscribe_get_candles(cpid, litecoin, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.Candle{

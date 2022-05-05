@@ -1,7 +1,7 @@
 defmodule XtbClient.StreamingSocket do
   use WebSockex
 
-  alias XtbClient.{AccountType}
+  alias XtbClient.{AccountType, StreamingMessage}
   alias XtbClient.Messages
 
   require Logger
@@ -43,7 +43,7 @@ defmodule XtbClient.StreamingSocket do
 
   @impl WebSockex
   def handle_connect(_conn, %{stream_session_id: stream_session_id} = state) do
-    ping_command = encode_streaming_command("ping", stream_session_id)
+    ping_command = encode_streaming_command({"ping", nil}, stream_session_id)
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
 
@@ -58,58 +58,54 @@ defmodule XtbClient.StreamingSocket do
   Subscribes `pid` process for messages from `method` query.
   
   ## Arguments
-  - `client` pid of the streaming socket process,
-  - `pid` pid of the caller awaiting for the result,
-  - `ref` unique reference of the query,
-  - `method` name of the query method,
-  - `params` [optional] arguments of the `method`.
+  - `server` pid of the streaming socket process,
+  - `caller` pid of the caller awaiting for the result,
+  - `message` struct with call context, see `XtbClient.StreamingMessage`.
   
-  Result of the query will be delivered to message mailbox of the `pid` process.
+  Result of the query will be delivered to message mailbox of the `caller` process.
   """
-  @spec subscribe(client(), client(), term(), binary()) :: :ok
-  def subscribe(client, pid, ref, method) do
-    WebSockex.cast(client, {:subscribe, {pid, ref, method}})
-  end
-
-  @spec subscribe(client(), client(), term(), binary(), map()) :: :ok
-  def subscribe(client, pid, ref, method, params) do
-    WebSockex.cast(client, {:subscribe, {pid, ref, method, params}})
+  @spec subscribe(client(), client(), StreamingMessage.t()) :: :ok
+  def subscribe(
+        server,
+        caller,
+        %StreamingMessage{} = message
+      ) do
+    WebSockex.cast(server, {:subscribe, {caller, message}})
   end
 
   @impl WebSockex
   def handle_cast(
-        {:subscribe, {pid, ref, method}},
+        {:subscribe,
+         {caller,
+          %StreamingMessage{
+            method: method,
+            response_method: response_method,
+            params: params
+          } = message}},
         %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
       ) do
     last_sub = check_rate(last_sub, actual_rate())
 
-    message = encode_streaming_command(method, session_id)
-    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
+    token = StreamingMessage.encode_token(message)
+
+    subscriptions =
+      Map.update(
+        subscriptions,
+        response_method,
+        {method, %{token => caller}},
+        fn {method, value} ->
+          {method, Map.put(value, token, caller)}
+        end
+      )
 
     state =
       state
       |> Map.put(:subscriptions, subscriptions)
       |> Map.put(:last_sub, last_sub)
 
-    {:reply, {:text, message}, state}
-  end
+    encoded_message = encode_streaming_command({method, params}, session_id)
 
-  @impl WebSockex
-  def handle_cast(
-        {:subscribe, {pid, ref, method, params}},
-        %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
-      ) do
-    last_sub = check_rate(last_sub, actual_rate())
-
-    message = encode_streaming_command(method, session_id, params)
-    subscriptions = Map.put(subscriptions, ref, {:subscription, pid, ref, method})
-
-    state =
-      state
-      |> Map.put(:subscriptions, subscriptions)
-      |> Map.put(:last_sub, last_sub)
-
-    {:reply, {:text, message}, state}
+    {:reply, {:text, encoded_message}, state}
   end
 
   defp check_rate(prev_rate_ms, actual_rate_ms) do
@@ -130,16 +126,16 @@ defmodule XtbClient.StreamingSocket do
     |> DateTime.to_unix(:millisecond)
   end
 
-  defp encode_streaming_command(type, streaming_session_id) do
+  defp encode_streaming_command({method, nil}, streaming_session_id) do
     Jason.encode!(%{
-      command: type,
+      command: method,
       streamSessionId: streaming_session_id
     })
   end
 
-  defp encode_streaming_command(type, streaming_session_id, params) do
+  defp encode_streaming_command({method, params}, streaming_session_id) do
     %{
-      command: type,
+      command: method,
       streamSessionId: streaming_session_id
     }
     |> Map.merge(Map.from_struct(params))
@@ -153,13 +149,19 @@ defmodule XtbClient.StreamingSocket do
   end
 
   defp handle_response(
-         %{"command" => command, "data" => data},
+         %{"command" => response_method, "data" => data},
          %{subscriptions: subscriptions} = state
        ) do
-    {:subscription, pid, ^command, method} = Map.get(subscriptions, command)
-
+    {method, method_subs} = Map.get(subscriptions, response_method)
     result = Messages.decode_message(method, data)
-    GenServer.cast(pid, {:stream, method, result})
+
+    token =
+      StreamingMessage.new(method, response_method, result)
+      |> StreamingMessage.encode_token()
+
+    caller = Map.get(method_subs, token)
+
+    GenServer.cast(caller, {:stream_result, {token, result}})
 
     {:ok, state}
   end
