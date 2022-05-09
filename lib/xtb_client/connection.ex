@@ -93,7 +93,8 @@ defmodule XtbClient.Connection do
       |> Map.put(:clients, %{})
       |> Map.put(:subscribers, %{})
 
-    GenServer.start_link(__MODULE__, state, [])
+    options = Map.get(args, :options, [])
+    GenServer.start_link(__MODULE__, state, options)
   end
 
   @impl true
