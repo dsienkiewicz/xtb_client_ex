@@ -375,7 +375,7 @@ defmodule XtbClient.ConnectionTest do
 
   @tag timeout: 2 * @default_wait_time
   test "subscribe to get candles", %{pid: pid} do
-    args = "EURPLN"
+    args = "BITCOIN"
     query = Candles.Query.new(args)
     Connection.subscribe_get_candles(pid, self(), query)
 
