@@ -1,17 +1,15 @@
-name: Elixir CI
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ["*"]
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build and test
+  publish:
+    name: Publish to hex.pm
     runs-on: self-hosted
 
     steps:
@@ -39,3 +37,9 @@ jobs:
           echo XTB_API_PASSWORD="${{ secrets.XTB_API_PASSWORD }}" >> .env.test
       - name: Run tests
         run: mix test
+      - name: Generate documentation
+        run: mix docs
+      - name: Publish
+        run: mix hex.publish --yes
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}

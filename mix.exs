@@ -5,7 +5,7 @@ defmodule XtbClient.MixProject do
     [
       app: :xtb_client_ex,
       name: "XtbClient",
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.12",
       description: "Elixir client for the XTB trading platform",
       source_url: "https://github.com/dsienkiewicz/xtb_client_ex",
