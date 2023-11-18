@@ -3,7 +3,7 @@ defmodule XtbClient.Messages.TradingHour do
 
   @moduledoc """
   Info about one available trading hour.
-  
+
   ## Parameters
   - `quotes` array of `XtbClient.Messages.Quote`s representing available quotes hours,
   - `symbol` symbol name,
@@ -12,7 +12,7 @@ defmodule XtbClient.Messages.TradingHour do
 
   @type t :: %__MODULE__{
           quotes: [Quote.t()],
-          symbol: binary(),
+          symbol: String.t(),
           trading: [Quote.t()]
         }
 

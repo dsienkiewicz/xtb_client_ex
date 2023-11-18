@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.NewsInfo do
   @moduledoc """
   Info about recent news.
-  
+
   ## Properties
   - `body` body of message,
   - `body_length` body length,
@@ -12,12 +12,12 @@ defmodule XtbClient.Messages.NewsInfo do
   """
 
   @type t :: %__MODULE__{
-          body: binary(),
+          body: String.t(),
           body_length: integer(),
-          key: binary(),
+          key: String.t(),
           time: DateTime.t(),
-          time_string: binary(),
-          title: binary()
+          time_string: String.t(),
+          title: String.t()
         }
 
   @enforce_keys [:body, :body_length, :key, :time, :time_string, :title]

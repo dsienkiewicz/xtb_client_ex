@@ -2,13 +2,13 @@ defmodule XtbClient.Messages.Candles do
   defmodule Query do
     @moduledoc """
     Info about query for candles.
-    
+
     ## Parameters
     - `symbol` symbol name.
     """
 
     @type t :: %__MODULE__{
-            symbol: binary()
+            symbol: String.t()
           }
 
     @enforce_keys [:symbol]
@@ -25,9 +25,9 @@ defmodule XtbClient.Messages.Candles do
 
   @moduledoc """
   Query result for `XtbClient.Messages.Candle`s.
-  
+
   Returns one `XtbClient.Messages.Candle` at a time.
-  
+
   ## Handled Api methods
   - `getCandles`
   """

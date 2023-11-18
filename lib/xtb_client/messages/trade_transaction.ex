@@ -4,7 +4,7 @@ defmodule XtbClient.Messages.TradeTransaction do
 
     @moduledoc """
     Info about command to trade the transaction.
-    
+
     ## Parameters
     - `cmd` operation code, see `XtbClient.Messages.Operation`,
     - `customComment` the value the customer may provide in order to retrieve it later,
@@ -21,14 +21,14 @@ defmodule XtbClient.Messages.TradeTransaction do
 
     @type t :: %__MODULE__{
             cmd: integer(),
-            customComment: binary(),
+            customComment: String.t(),
             expiration: integer(),
             offset: integer(),
             order: integer(),
             price: float(),
             sl: float(),
             tp: float(),
-            symbol: binary(),
+            symbol: String.t(),
             type: integer(),
             volume: float()
           }
@@ -100,10 +100,10 @@ defmodule XtbClient.Messages.TradeTransaction do
 
   @moduledoc """
   Info about realized trade transaction.
-  
+
   ## Parameters
   - `order` holds info about order number, needed later for verification about order status.
-  
+
   ## Handled Api methods
   - `tradeTransaction`
   """

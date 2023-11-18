@@ -12,8 +12,17 @@ defmodule XtbClient.MixProject do
       start_permanent: Mix.env() == :prod,
       package: package(),
       aliases: aliases(),
+      dialyzer: dialyzer(),
       deps: deps(),
       docs: docs()
+    ]
+  end
+
+  defp dialyzer do
+    [
+      plt_add_apps: [:mix, :ex_unit],
+      plt_core_path: "priv/plts",
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
     ]
   end
 
@@ -30,8 +39,12 @@ defmodule XtbClient.MixProject do
     [
       {:jason, "~> 1.3"},
       {:websockex, "~> 0.4.3"},
+
+      # Dev & test only
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:dotenvy, "~> 0.6.0", only: [:dev, :test]}
+      {:dotenvy, "~> 0.6.0", only: [:dev, :test]},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.UserInfo do
   @moduledoc """
   Info about the current user.
-  
+
   ## Parameters
   - `company_unit` unit the account is assigned to,
   - `currency` account currency,
@@ -10,18 +10,18 @@ defmodule XtbClient.Messages.UserInfo do
   - `leverage_mult` the factor used for margin calculations,
   - `spread_type` spread type, `null` if not applicable,
   - `trailing_stop` indicates whether this account is enabled to use trailing stop.
-  
+
   ## Handled Api methods
   - `getCurrentUserData`
   """
 
   @type t :: %__MODULE__{
           company_unit: integer(),
-          currency: binary(),
-          group: binary(),
+          currency: String.t(),
+          group: String.t(),
           ib_account: true | false,
           leverage_mult: float(),
-          spread_type: binary() | nil,
+          spread_type: String.t() | nil,
           trailing_stop: boolean()
         }
 

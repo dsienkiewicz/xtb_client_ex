@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.CalendarInfo do
   @moduledoc """
   Calendar event.
-  
+
   ## Parameters
   - `country` two letter country code,
   - `current` market value (current), empty before time of release of this value (time from "time" record),
@@ -14,14 +14,14 @@ defmodule XtbClient.Messages.CalendarInfo do
   """
 
   @type t :: %__MODULE__{
-          country: binary(),
-          current: binary(),
-          forecast: binary(),
-          impact: binary(),
-          period: binary(),
-          previous: binary(),
+          country: String.t(),
+          current: String.t(),
+          forecast: String.t(),
+          impact: String.t(),
+          period: String.t(),
+          previous: String.t(),
           time: DateTime.t(),
-          title: binary()
+          title: String.t()
         }
 
   @enforce_keys [:country, :current, :forecast, :impact, :period, :previous, :time, :title]

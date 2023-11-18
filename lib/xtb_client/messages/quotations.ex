@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.Quotations do
   defmodule Query do
     @moduledoc """
     Info about query for tick prices.
-    
+
     ## Parameters
     - `symbol` symbol name,
     - `minArrivalTime` this field is optional and defines the minimal interval in milliseconds between any two consecutive updates.
@@ -13,7 +13,7 @@ defmodule XtbClient.Messages.Quotations do
     """
 
     @type t :: %__MODULE__{
-            symbol: binary(),
+            symbol: String.t(),
             minArrivalTime: integer(),
             maxLevel: integer()
           }
@@ -52,7 +52,7 @@ defmodule XtbClient.Messages.Quotations do
 
   @moduledoc """
   Query result for list of `XtbClient.Messages.TickPrice`s.
-  
+
   ## Handled Api methods
   - `getTickPrices`
   """

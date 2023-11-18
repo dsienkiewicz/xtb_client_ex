@@ -3,9 +3,9 @@ defmodule XtbClient.Messages.Candle do
 
   @moduledoc """
   Info representing aggregated price & volume values for candle.
-  
+
   Default interval for one candle is one minute.
-  
+
   ## Parameters
   - `open` open price in base currency,
   - `high` highest value in the given period in base currency,
@@ -25,9 +25,9 @@ defmodule XtbClient.Messages.Candle do
           close: float(),
           vol: float(),
           ctm: DateTime.t(),
-          ctm_string: binary(),
+          ctm_string: String.t(),
           quote_id: QuoteId.t(),
-          symbol: binary()
+          symbol: String.t()
         }
 
   @enforce_keys [

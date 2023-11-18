@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   defmodule Query do
     @moduledoc """
     Info about query for trade transaction status.
-    
+
     ## Parameters
     - `order` unique order number.
     """
@@ -27,7 +27,7 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
 
   @moduledoc """
   Info about the status of particular transaction.
-  
+
   ## Parameters
   - `ask` price in base currency,
   - `bid` price in base currency,
@@ -35,7 +35,7 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   - `message` can be `null`,
   - `order` unique order number,
   - `status` request status code, see `XtbClient.Messages.TradeStatus`.
-  
+
   ## Handled Api methods
   - `tradeTransactionStatus`
   """
@@ -43,8 +43,8 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   @type t :: %__MODULE__{
           ask: float(),
           bid: float(),
-          custom_comment: binary(),
-          message: binary() | nil,
+          custom_comment: String.t(),
+          message: String.t() | nil,
           order: integer(),
           status: TransactionStatus.t()
         }
