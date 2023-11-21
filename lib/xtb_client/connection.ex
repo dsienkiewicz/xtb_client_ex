@@ -117,7 +117,7 @@ defmodule XtbClient.Connection do
   def init(opts) do
     {:ok, mpid} = MainSocket.start_link(opts)
 
-    Process.sleep(1_000)
+    Process.sleep(500)
     MainSocket.stream_session_id(mpid, self())
 
     Process.flag(:trap_exit, true)

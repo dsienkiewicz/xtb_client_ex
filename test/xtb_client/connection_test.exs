@@ -72,7 +72,14 @@ defmodule XtbClient.ConnectionTest do
 
     {:ok, pid} = start_supervised({Connection, params})
 
-    {:ok, %{pid: pid}}
+    {:ok, %{params: params, pid: pid}}
+  end
+
+  test "starts new connection with a name", %{params: params} do
+    params = params |> Keyword.put(:name, :test_connection)
+    {:ok, pid} = Connection.start_link(params)
+
+    assert Process.whereis(:test_connection) == pid
   end
 
   test "get all symbols", %{pid: pid} do
