@@ -25,7 +25,14 @@ Find more examples in the folder `examples/`.
 
 ### Starting client connection
 ```elixir
-params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
+params = [
+  connection: %{
+    app_name: "XtbClient",
+    type: :demo,
+    url: "wss://ws.xtb.com",
+    user: "<<USER_ID>>",
+    password: "<<PASSWORD>>"}
+  ]
 
 {:ok, pid} = XtbClient.Connection.start_link(params)
 ```
@@ -34,7 +41,14 @@ params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<
 ```elixir
 Code.require_file("./examples/stream_listener.ex")
 
-params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
+params = [
+  connection: %{
+    app_name: "XtbClient",
+    type: :demo,
+    url: "wss://ws.xtb.com",
+    user: "<<USER_ID>>",
+    password: "<<PASSWORD>>"}
+  ]
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
 args = %{symbol: "LITECOIN"}
@@ -81,7 +95,14 @@ Listener handle info: {:ok,
 ```elixir
 Code.require_file("./examples/stream_listener.ex")
 
-params = %{app_name: "XtbClient", type: :demo, url: "wss://ws.xtb.com", user: "<<USER_ID>>", password: "<<PASSWORD>>"}
+params = [
+  connection: %{
+    app_name: "XtbClient",
+    type: :demo,
+    url: "wss://ws.xtb.com",
+    user: "<<USER_ID>>",
+    password: "<<PASSWORD>>"}
+  ]
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
 args = "LITECOIN"
