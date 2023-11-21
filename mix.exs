@@ -7,6 +7,7 @@ defmodule XtbClient.MixProject do
       name: "XtbClient",
       version: "0.1.1",
       elixir: "~> 1.12",
+      elixirc_paths: elixirc_paths(Mix.env()),
       description: "Elixir client for the XTB trading platform",
       source_url: "https://github.com/dsienkiewicz/xtb_client_ex",
       start_permanent: Mix.env() == :prod,
@@ -33,6 +34,10 @@ defmodule XtbClient.MixProject do
       mod: {XtbClient.Application, []}
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do

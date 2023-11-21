@@ -108,7 +108,8 @@ defmodule XtbClient.Connection do
   """
   @spec start_link(GenServer.options()) :: GenServer.on_start()
   def start_link(opts) do
-    {init_opts, conn_opts} = Keyword.split(opts, [:connection])
+    {connection_opts, conn_opts} = Keyword.split(opts, [:connection])
+    init_opts = Keyword.fetch!(connection_opts, :connection)
     GenServer.start_link(__MODULE__, init_opts, conn_opts)
   end
 
