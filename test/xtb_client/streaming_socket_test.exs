@@ -1,11 +1,12 @@
 defmodule XtbClient.StreamingSocketTest do
+  @moduledoc false
   use ExUnit.Case, async: true
   doctest XtbClient.StreamingSocket
 
   alias XtbClient.MainSocket
   alias XtbClient.StreamingSocket
 
-  setup_all do
+  setup do
     Dotenvy.source([
       ".env.#{Mix.env()}",
       ".env.#{Mix.env()}.override",
@@ -25,22 +26,21 @@ defmodule XtbClient.StreamingSocketTest do
       app_name: "XtbClient"
     }
 
-    {:ok, mpid} = MainSocket.start_link(params)
-
-    Process.sleep(1_000)
+    {:ok, mpid} = start_supervised({MainSocket, params})
+    Process.sleep(100)
     MainSocket.stream_session_id(mpid, self())
 
     receive do
       {:"$gen_cast", {:stream_session_id, session_id}} ->
-        {:ok, %{url: url, type: type, stream_session_id: session_id}}
+        {:ok, %{params: %{url: url, type: type, stream_session_id: session_id}}}
     end
   end
 
-  @tag timeout: 2 * 30 * 1000
-  test "sends ping after login", context do
-    {:ok, pid} = StreamingSocket.start_link(context)
+  @tag timeout: 40 * 1000
+  test "sends ping after login", %{params: params} do
+    {:ok, pid} = StreamingSocket.start_link(params)
 
-    Process.sleep(2 * 29 * 1000)
+    Process.sleep(30 * 1000 + 1)
 
     assert Process.alive?(pid) == true
   end
