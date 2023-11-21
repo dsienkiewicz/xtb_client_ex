@@ -4,7 +4,7 @@ defmodule XtbClient.Messages.ProfitCalculation do
 
     @moduledoc """
     Info about query for calculation of profit.
-    
+
     ## Parameters
     - `closePrice` theoretical close price of order,
     - `cmd` operation code, see `XtbClient.Messages.Operation`,
@@ -17,7 +17,7 @@ defmodule XtbClient.Messages.ProfitCalculation do
             closePrice: float(),
             cmd: Operation.t(),
             openPrice: float(),
-            symbol: binary(),
+            symbol: String.t(),
             volume: float()
           }
 
@@ -51,10 +51,10 @@ defmodule XtbClient.Messages.ProfitCalculation do
 
   @moduledoc """
   Query result for profit calculation.
-  
+
   ## Parameters
   - `profit` profit in account currency.
-  
+
   ## Handled Api methods
   - `getProfitCalculation`
   """

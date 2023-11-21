@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.StepRule do
   @moduledoc """
   Info about step rule definition.
-  
+
   ## Parameters
   - `id` step rule ID,
   - `name` step rule name,
@@ -12,7 +12,7 @@ defmodule XtbClient.Messages.StepRule do
 
   @type t :: %__MODULE__{
           id: integer(),
-          name: binary(),
+          name: String.t(),
           steps: [Step.t()]
         }
 

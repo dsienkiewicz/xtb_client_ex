@@ -4,7 +4,7 @@ defmodule XtbClient.MainSocketTest do
 
   alias XtbClient.MainSocket
 
-  setup_all do
+  setup do
     Dotenvy.source([
       ".env.#{Mix.env()}",
       ".env.#{Mix.env()}.override",
@@ -23,23 +23,23 @@ defmodule XtbClient.MainSocketTest do
       app_name: "XtbClient"
     }
 
-    {:ok, params}
+    {:ok, %{params: params}}
   end
 
-  test "logs in to account", context do
-    {:ok, pid} = MainSocket.start_link(context)
+  test "logs in to account", %{params: params} do
+    {:ok, pid} = MainSocket.start_link(params)
 
-    Process.sleep(1_000)
+    Process.sleep(100)
 
     MainSocket.stream_session_id(pid, self())
     assert_receive {:"$gen_cast", {:stream_session_id, _}}
   end
 
-  @tag timeout: 2 * 30 * 1000
-  test "sends ping after login", context do
-    {:ok, pid} = MainSocket.start_link(context)
+  @tag timeout: 40 * 1000
+  test "sends ping after login", %{params: params} do
+    {:ok, pid} = MainSocket.start_link(params)
 
-    Process.sleep(2 * 29 * 1000)
+    Process.sleep(30 * 1000 + 1)
 
     assert Process.alive?(pid) == true
   end

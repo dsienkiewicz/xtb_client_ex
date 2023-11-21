@@ -1,4 +1,5 @@
 defmodule XtbClient.TransactionHelper do
+  @moduledoc false
   alias XtbClient.Connection
 
   alias XtbClient.Messages.{

@@ -1,14 +1,14 @@
 defmodule XtbClient.Messages.SymbolVolume do
   @moduledoc """
   Info about symbol ticker + volume.
-  
+
   ## Parameters
   - `symbol` symbol name,
   - `volume` volume in lots.
   """
 
   @type t :: %__MODULE__{
-          symbol: binary(),
+          symbol: String.t(),
           volume: float()
         }
 

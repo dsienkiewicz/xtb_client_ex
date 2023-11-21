@@ -2,13 +2,13 @@ defmodule XtbClient.Messages.TradingHours do
   defmodule Query do
     @moduledoc """
     Info about the query for trading hours.
-    
+
     ## Parameters
     - `symbols` array of symbol names.
     """
 
     @type t :: %__MODULE__{
-            symbols: [binary()]
+            symbols: [String.t()]
           }
 
     @enforce_keys [:symbols]
@@ -27,10 +27,10 @@ defmodule XtbClient.Messages.TradingHours do
 
   @moduledoc """
   Query result for list of `XtbClient.Messages.TradingHour`s.
-  
+
   ## Parameters
   - `data` array or results.
-  
+
   ## Handled Api methods
   - `getTradingHours`
   """

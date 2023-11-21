@@ -3,7 +3,7 @@ defmodule XtbClient.Messages.TickPrice do
 
   @moduledoc """
   Info about one tick of price.
-  
+
   ## Parameters
   - `ask` ask price in base currency,
   - `ask_volume` number of available lots to buy at given price or `null` if not applicable
@@ -32,7 +32,7 @@ defmodule XtbClient.Messages.TickPrice do
           quote_id: QuoteId.t() | nil,
           spread_raw: float(),
           spread_table: float(),
-          symbol: binary(),
+          symbol: String.t(),
           timestamp: DateTime.t()
         }
 

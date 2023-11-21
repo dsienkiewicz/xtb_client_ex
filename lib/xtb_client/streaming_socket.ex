@@ -1,48 +1,73 @@
 defmodule XtbClient.StreamingSocket do
+  @moduledoc """
+  WebSocket server used for asynchronous communication.
+
+  `StreamingSocket` is being used like standard `GenServer` - could be started with `start_link/1` and supervised.
+
+  After successful connection to WebSocket the flow is:
+  - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
+  """
   use WebSockex
 
   alias XtbClient.{AccountType, StreamingMessage}
   alias XtbClient.Messages
+  alias XtbClient.RateLimit
 
   require Logger
 
   @ping_interval 30 * 1000
-  @rate_limit_interval 200
 
-  @type client :: atom | pid | {atom, any} | {:via, atom, any}
+  defmodule Config do
+    @type t :: %{
+            :url => String.t() | URI.t(),
+            :type => AccountType.t(),
+            :stream_session_id => String.t()
+          }
 
-  @moduledoc """
-  WebSocket server used for asynchronous communication.
-  
-  `StreamingSocket` is being used like standard `GenServer` - could be started with `start_link/1` and supervised.
-  
-  After successful connection to WebSocket the flow is:
-  - process schedules to itself the `ping` command (with recurring interval) - to maintain persistent connection with backend.
-  """
+    def parse(opts) do
+      type = AccountType.format_streaming(get_in(opts, [:type]))
+
+      %{
+        url: get_in(opts, [:url]) |> URI.merge(type) |> URI.to_string(),
+        type: type,
+        stream_session_id: get_in(opts, [:stream_session_id])
+      }
+    end
+  end
+
+  defmodule State do
+    @enforce_keys [
+      :url,
+      :stream_session_id,
+      :subscriptions,
+      :rate_limit
+    ]
+    defstruct url: nil,
+              stream_session_id: nil,
+              subscriptions: %{},
+              rate_limit: nil
+  end
 
   @doc """
   Starts a `XtbClient.StreamingSocket` process linked to the calling process.
   """
-  @spec start_link(%{
-          :stream_session_id => binary(),
-          :type => AccountType.t(),
-          :url => binary | URI.t(),
-          optional(any) => any
-        }) :: GenServer.on_start()
-  def start_link(%{url: url, type: type, stream_session_id: _stream_session_id} = state) do
-    account_type = AccountType.format_streaming(type)
-    uri = URI.merge(url, account_type) |> URI.to_string()
+  @spec start_link(Config.t()) :: GenServer.on_start()
+  def start_link(opts) do
+    %{url: url, stream_session_id: stream_session_id} =
+      Config.parse(opts)
 
-    state =
-      state
-      |> Map.put(:last_sub, actual_rate())
-      |> Map.put(:subscriptions, %{})
+    state = %State{
+      url: url,
+      stream_session_id: stream_session_id,
+      subscriptions: %{},
+      rate_limit: RateLimit.new(200)
+    }
 
-    WebSockex.start_link(uri, __MODULE__, state)
+    WebSockex.start_link(url, __MODULE__, state)
   end
 
   @impl WebSockex
-  def handle_connect(_conn, %{stream_session_id: stream_session_id} = state) do
+  def handle_connect(_conn, %State{stream_session_id: stream_session_id} = state) do
     ping_command = encode_streaming_command({"ping", nil}, stream_session_id)
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
@@ -56,15 +81,15 @@ defmodule XtbClient.StreamingSocket do
 
   @doc """
   Subscribes `pid` process for messages from `method` query.
-  
+
   ## Arguments
   - `server` pid of the streaming socket process,
   - `caller` pid of the caller awaiting for the result,
   - `message` struct with call context, see `XtbClient.StreamingMessage`.
-  
+
   Result of the query will be delivered to message mailbox of the `caller` process.
   """
-  @spec subscribe(client(), client(), StreamingMessage.t()) :: :ok
+  @spec subscribe(GenServer.server(), GenServer.server(), StreamingMessage.t()) :: :ok
   def subscribe(
         server,
         caller,
@@ -82,9 +107,14 @@ defmodule XtbClient.StreamingSocket do
             response_method: response_method,
             params: params
           } = message}},
-        %{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} = state
+        %State{
+          subscriptions: subscriptions,
+          rate_limit: rate_limit,
+          stream_session_id: session_id
+        } =
+          state
       ) do
-    last_sub = check_rate(last_sub, actual_rate())
+    rate_limit = RateLimit.check_rate(rate_limit)
 
     token = StreamingMessage.encode_token(message)
 
@@ -98,32 +128,10 @@ defmodule XtbClient.StreamingSocket do
         end
       )
 
-    state =
-      state
-      |> Map.put(:subscriptions, subscriptions)
-      |> Map.put(:last_sub, last_sub)
-
     encoded_message = encode_streaming_command({method, params}, session_id)
+    state = %{state | subscriptions: subscriptions, rate_limit: rate_limit}
 
     {:reply, {:text, encoded_message}, state}
-  end
-
-  defp check_rate(prev_rate_ms, actual_rate_ms) do
-    rate_diff = actual_rate_ms - prev_rate_ms
-
-    case rate_diff > @rate_limit_interval do
-      true ->
-        actual_rate_ms
-
-      false ->
-        Process.sleep(rate_diff)
-        actual_rate()
-    end
-  end
-
-  defp actual_rate() do
-    DateTime.utc_now()
-    |> DateTime.to_unix(:millisecond)
   end
 
   defp encode_streaming_command({method, nil}, streaming_session_id) do
@@ -150,13 +158,14 @@ defmodule XtbClient.StreamingSocket do
 
   defp handle_response(
          %{"command" => response_method, "data" => data},
-         %{subscriptions: subscriptions} = state
+         %State{subscriptions: subscriptions} = state
        ) do
     {method, method_subs} = Map.get(subscriptions, response_method)
     result = Messages.decode_message(method, data)
 
     token =
-      StreamingMessage.new(method, response_method, result)
+      method
+      |> StreamingMessage.new(response_method, result)
       |> StreamingMessage.encode_token()
 
     caller = Map.get(method_subs, token)

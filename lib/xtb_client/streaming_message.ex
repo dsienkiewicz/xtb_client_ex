@@ -1,11 +1,16 @@
 defmodule XtbClient.StreamingMessage do
+  @moduledoc """
+  Helper module for encoding and decoding streaming messages.
+  """
+
   @type t :: %__MODULE__{
-          method: binary(),
-          response_method: binary(),
+          method: String.t(),
+          response_method: String.t(),
           params: map() | nil
         }
-  @type token :: {:method, binary()} | {:hashed_params, binary(), binary()}
+  @type token :: {:method, String.t()} | {:hashed_params, String.t(), String.t()}
 
+  @enforce_keys [:method, :response_method, :params]
   defstruct method: "",
             response_method: "",
             params: nil

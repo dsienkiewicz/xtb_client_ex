@@ -4,7 +4,7 @@ defmodule XtbClient.Messages.ChartLast do
 
     @moduledoc """
     Parameters for last chart query.
-    
+
     ## Parameters
     - `period` an atom of `XtbClient.Messages.Period` type, describing the time interval for the query
     - `start` start of chart block (rounded down to the nearest interval and excluding)
@@ -14,7 +14,7 @@ defmodule XtbClient.Messages.ChartLast do
     @type t :: %__MODULE__{
             period: Period.minute_period(),
             start: integer(),
-            symbol: binary()
+            symbol: String.t()
           }
 
     @enforce_keys [:period, :start, :symbol]

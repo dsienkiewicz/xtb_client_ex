@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.TickPrices do
   defmodule Query do
     @moduledoc """
     Info about the query for tick prices.
-    
+
     ## Parameters
     - `level` price level (possible values of level field: -1 => all levels, 0 => base level bid and ask price for instrument, >0 => specified level),
     - `symbols` array of symbol names,
@@ -11,7 +11,7 @@ defmodule XtbClient.Messages.TickPrices do
 
     @type t :: %__MODULE__{
             level: integer(),
-            symbols: [binary()],
+            symbols: [String.t()],
             timestamp: integer()
           }
 
@@ -40,10 +40,10 @@ defmodule XtbClient.Messages.TickPrices do
 
   @moduledoc """
   Query result for list of `XtbClient.Messages.TickPrice`s.
-  
+
   ## Parameters
   - `data` array or results.
-  
+
   ## Handled Api methods
   - `getTickPrices`
   """

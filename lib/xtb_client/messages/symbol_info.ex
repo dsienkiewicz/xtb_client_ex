@@ -2,13 +2,13 @@ defmodule XtbClient.Messages.SymbolInfo do
   defmodule Query do
     @moduledoc """
     Info about the query for symbol info.
-    
+
     ## Parameters
     - `symbol` symbol name.
     """
 
     @type t :: %__MODULE__{
-            symbol: binary()
+            symbol: String.t()
           }
 
     @enforce_keys [:symbol]
@@ -28,9 +28,9 @@ defmodule XtbClient.Messages.SymbolInfo do
 
   @moduledoc """
   Information relevant to the symbol of security.
-  
+
   Please be advised that result values for profit and margin calculation can be used optionally, because server is able to perform all profit/margin calculations for Client application by commands described later in this document.
-  
+
   ## Parameters
   - `ask` ask price in base currency,
   - `bid` bid price in base currency,
@@ -78,7 +78,7 @@ defmodule XtbClient.Messages.SymbolInfo do
   - `time_string` time in string,
   - `trailing_enabled` indicates whether trailing stop (offset) is applicable to the instrument,
   - `type` instrument class number.
-  
+
   ## Handled Api methods
   - `getSymbol`
   """
@@ -86,14 +86,14 @@ defmodule XtbClient.Messages.SymbolInfo do
   @type t :: %__MODULE__{
           ask: float(),
           bid: float(),
-          category_name: binary(),
+          category_name: String.t(),
           contract_size: integer(),
-          currency: binary(),
+          currency: String.t(),
           currency_pair: true | false,
-          currency_profit: binary(),
-          description: binary(),
+          currency_profit: String.t(),
+          description: String.t(),
           expiration: DateTime.t() | nil,
-          group_name: binary(),
+          group_name: String.t(),
           high: float(),
           initial_margin: integer(),
           instant_max_volume: integer(),
@@ -123,11 +123,11 @@ defmodule XtbClient.Messages.SymbolInfo do
           swap_long: float(),
           swap_short: float(),
           swap_type: integer(),
-          symbol: binary(),
+          symbol: String.t(),
           tick_size: float(),
           tick_value: float(),
           time: DateTime.t(),
-          time_string: binary(),
+          time_string: String.t(),
           trailing_enabled: true | false,
           type: integer()
         }

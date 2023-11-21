@@ -3,7 +3,7 @@ defmodule XtbClient.Messages.TradeInfo do
 
   @moduledoc """
   Info about the trade that has happened.
-  
+
   ## Parameters
   - `close_price` close price in base currency,
   - `close_time` `null` if order is not closed,
@@ -40,9 +40,9 @@ defmodule XtbClient.Messages.TradeInfo do
           close_time: DateTime.t() | nil,
           closed: boolean(),
           operation: integer(),
-          comment: binary(),
+          comment: String.t(),
           commission: float() | nil,
-          custom_comment: binary() | nil,
+          custom_comment: String.t() | nil,
           digits: integer(),
           expiration: DateTime.t() | nil,
           margin_rate: float(),
@@ -58,7 +58,7 @@ defmodule XtbClient.Messages.TradeInfo do
           spread: float() | nil,
           state: integer() | nil,
           storage: float(),
-          symbol: binary() | nil,
+          symbol: String.t() | nil,
           taxes: float() | nil,
           timestamp: DateTime.t() | nil,
           take_profit: float(),

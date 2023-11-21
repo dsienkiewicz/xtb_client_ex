@@ -1,18 +1,18 @@
 defmodule XtbClient.Messages.ServerTime do
   @moduledoc """
   Info about current time on trading server.
-  
+
   ## Parameters
   - `time` actual time on server,
   - `time_string` string version of `time` value.
-  
+
   ## Handled Api methods
   - `getServerTime`
   """
 
   @type t :: %__MODULE__{
           time: DateTime.t(),
-          time_string: binary()
+          time_string: String.t()
         }
 
   @enforce_keys [:time, :time_string]

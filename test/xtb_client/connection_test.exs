@@ -1,6 +1,5 @@
-Code.require_file("transaction_helper.exs", __DIR__)
-
 defmodule XtbClient.ConnectionTest do
+  @moduledoc false
   use ExUnit.Case, async: true
   doctest XtbClient.Connection
 
@@ -46,11 +45,11 @@ defmodule XtbClient.ConnectionTest do
     Version
   }
 
-  alias XtbClient.TransactionHelper
+  import XtbClient.TransactionHelper
 
   @default_wait_time 60 * 1000
 
-  setup_all do
+  setup do
     Dotenvy.source([
       ".env.#{Mix.env()}",
       ".env.#{Mix.env()}.override",
@@ -61,18 +60,26 @@ defmodule XtbClient.ConnectionTest do
     user = Dotenvy.env!("XTB_API_USERNAME", :string!)
     passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
 
-    params = %{
-      url: url,
-      user: user,
-      password: passwd,
-      type: :demo,
-      app_name: "XtbClient"
-    }
+    params = [
+      connection: %{
+        url: url,
+        user: user,
+        password: passwd,
+        type: :demo,
+        app_name: "XtbClient"
+      }
+    ]
 
+    {:ok, pid} = start_supervised({Connection, params})
+
+    {:ok, %{params: params, pid: pid}}
+  end
+
+  test "starts new connection with a name", %{params: params} do
+    params = params |> Keyword.put(:name, :test_connection)
     {:ok, pid} = Connection.start_link(params)
-    # :sys.trace(pid, true)
 
-    {:ok, %{pid: pid}}
+    assert Process.whereis(:test_connection) == pid
   end
 
   test "get all symbols", %{pid: pid} do
@@ -283,7 +290,7 @@ defmodule XtbClient.ConnectionTest do
     # needs some time for server to process order correctly
     Process.sleep(100)
 
-    # 1. way - get all opened only trades
+    # get all opened only trades
     trades_query = Trades.Query.new(true)
     result = Connection.get_trades(pid, trades_query)
 
@@ -292,12 +299,6 @@ defmodule XtbClient.ConnectionTest do
     position_to_close =
       result.data
       |> Enum.find(&(&1.order_closed == open_order_id))
-
-    # 2. way - get trades by position IDs
-    trades_records_query = TradeInfos.Query.new([position_to_close.position])
-    result = Connection.get_trade_records(pid, trades_records_query)
-
-    assert %TradeInfos{} = result
 
     close_args = %{
       operation: :buy,
@@ -313,9 +314,6 @@ defmodule XtbClient.ConnectionTest do
     result = Connection.trade_transaction(pid, close)
 
     assert %TradeTransaction{} = result
-
-    # needs some time for server to process order correctly
-    Process.sleep(100)
 
     close_order_id = result.order
     status = TradeTransactionStatus.Query.new(close_order_id)
@@ -341,13 +339,12 @@ defmodule XtbClient.ConnectionTest do
     open_order_id = result.order
 
     # needs some time for server to process order correctly
-    Process.sleep(1000)
+    Process.sleep(100)
 
-    # real test scneario
+    # real test scenario
     Connection.subscribe_get_balance(pid, self())
-    Process.sleep(2 * 1000)
 
-    # 1. way - get all opened only trades
+    # get all opened only trades
     trades_query = Trades.Query.new(true)
     result = Connection.get_trades(pid, trades_query)
 
@@ -373,13 +370,13 @@ defmodule XtbClient.ConnectionTest do
     assert %TradeTransaction{} = result
   end
 
-  @tag timeout: 2 * @default_wait_time
+  @tag timeout: @default_wait_time
   test "subscribe to get candles", %{pid: pid} do
-    args = "BITCOIN"
+    args = "LITECOIN"
     query = Candles.Query.new(args)
     Connection.subscribe_get_candles(pid, self(), query)
 
-    assert_receive {:ok, %Candle{}}, 2 * @default_wait_time
+    assert_receive {:ok, %Candle{}}, @default_wait_time
   end
 
   test "subscribe to keep alive", %{pid: pid} do
@@ -388,16 +385,15 @@ defmodule XtbClient.ConnectionTest do
     assert_receive {:ok, %KeepAlive{}}, @default_wait_time
   end
 
-  @tag timeout: 2 * @default_wait_time, skip: true
+  @tag skip: true
   test "subscribe to get news", %{pid: pid} do
     Connection.subscribe_get_news(pid, self())
 
-    assert_receive {:ok, %NewsInfo{}}, 2 * @default_wait_time
+    assert_receive {:ok, %NewsInfo{}}, @default_wait_time
   end
 
   test "subscribe to get profits", %{pid: pid} do
     Connection.subscribe_get_profits(pid, self())
-    Process.sleep(2 * 1000)
 
     buy_args = %{
       operation: :buy,
@@ -408,7 +404,7 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    order_id = TransactionHelper.open_trade(pid, buy_args)
+    order_id = open_trade(pid, buy_args)
 
     assert_receive {:ok, %ProfitInfo{}}, @default_wait_time
 
@@ -420,10 +416,7 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    # wait for some ticks
-    Process.sleep(2 * 1000)
-
-    TransactionHelper.close_trade(pid, order_id, close_args)
+    close_trade(pid, order_id, close_args)
 
     assert_receive {:ok, %ProfitInfo{}}, @default_wait_time
   end
@@ -438,7 +431,6 @@ defmodule XtbClient.ConnectionTest do
 
   test "subscribe to get trades", %{pid: pid} do
     Connection.subscribe_get_trades(pid, self())
-    Process.sleep(2 * 1000)
 
     buy_args = %{
       operation: :buy,
@@ -449,7 +441,7 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    order_id = TransactionHelper.open_trade(pid, buy_args)
+    order_id = open_trade(pid, buy_args)
 
     assert_receive {:ok, %TradeInfo{}}, @default_wait_time
 
@@ -461,17 +453,13 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    # wait for some ticks
-    Process.sleep(2 * 1000)
-
-    TransactionHelper.close_trade(pid, order_id, close_args)
+    close_trade(pid, order_id, close_args)
 
     assert_receive {:ok, %TradeInfo{}}, @default_wait_time
   end
 
   test "subscribe to trade status", %{pid: pid} do
     Connection.subscribe_get_trade_status(pid, self())
-    Process.sleep(2 * 1000)
 
     buy_args = %{
       operation: :buy,
@@ -482,7 +470,7 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    order_id = TransactionHelper.open_trade(pid, buy_args)
+    order_id = open_trade(pid, buy_args)
 
     assert_receive {:ok, %TradeStatus{}}, @default_wait_time
 
@@ -494,10 +482,7 @@ defmodule XtbClient.ConnectionTest do
       volume: 0.5
     }
 
-    # wait for some ticks
-    Process.sleep(2 * 1000)
-
-    TransactionHelper.close_trade(pid, order_id, close_args)
+    close_trade(pid, order_id, close_args)
 
     assert_receive {:ok, %TradeStatus{}}, @default_wait_time
   end

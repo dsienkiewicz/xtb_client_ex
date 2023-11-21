@@ -4,14 +4,14 @@ defmodule XtbClient.Messages.ChartRange do
 
     @moduledoc """
     Parameters for chart range query.
-    
+
     ## Parameters
     - `start` start of chart block (rounded down to the nearest interval and excluding),
     - `end` end of chart block (rounded down to the nearest interval and excluding),
     - `period` period, see `XtbClient.Messages.Period`,
     - `symbol` symbol name,
     - `ticks` number of ticks needed, this field is optional, please read the description below.
-    
+
     ## Ticks
     Ticks field - if ticks is not set or value is `0`, `getChartRangeRequest` works as before (you must send valid start and end time fields).
     If ticks value is not equal to `0`, field end is ignored.
@@ -24,7 +24,7 @@ defmodule XtbClient.Messages.ChartRange do
             start: integer(),
             end: integer(),
             period: Period.t(),
-            symbol: binary(),
+            symbol: String.t(),
             ticks: integer()
           }
 
