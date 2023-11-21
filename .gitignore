@@ -46,3 +46,6 @@ npm-debug.log
 
 # Dotenv files
 .env*
+
+# VSCode
+.vscode/
