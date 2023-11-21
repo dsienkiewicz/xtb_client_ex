@@ -11,11 +11,11 @@ defmodule XtbClient.StreamingSocket do
 
   alias XtbClient.{AccountType, StreamingMessage}
   alias XtbClient.Messages
+  alias XtbClient.RateLimit
 
   require Logger
 
   @ping_interval 30 * 1000
-  @rate_limit_interval 200
 
   defmodule Config do
     @type t :: %{
@@ -40,12 +40,12 @@ defmodule XtbClient.StreamingSocket do
       :url,
       :stream_session_id,
       :subscriptions,
-      :last_sub
+      :rate_limit
     ]
     defstruct url: nil,
               stream_session_id: nil,
               subscriptions: %{},
-              last_sub: 0
+              rate_limit: nil
   end
 
   @doc """
@@ -60,7 +60,7 @@ defmodule XtbClient.StreamingSocket do
       url: url,
       stream_session_id: stream_session_id,
       subscriptions: %{},
-      last_sub: 0
+      rate_limit: RateLimit.new(200)
     }
 
     WebSockex.start_link(url, __MODULE__, state)
@@ -107,10 +107,15 @@ defmodule XtbClient.StreamingSocket do
             response_method: response_method,
             params: params
           } = message}},
-        %State{subscriptions: subscriptions, last_sub: last_sub, stream_session_id: session_id} =
+        %State{
+          subscriptions: subscriptions,
+          rate_limit: rate_limit,
+          stream_session_id: session_id
+        } =
           state
       ) do
-    last_sub = check_rate(last_sub, actual_rate())
+    rate_limit = RateLimit.check_rate(rate_limit)
+
     token = StreamingMessage.encode_token(message)
 
     subscriptions =
@@ -124,27 +129,9 @@ defmodule XtbClient.StreamingSocket do
       )
 
     encoded_message = encode_streaming_command({method, params}, session_id)
-    state = %{state | subscriptions: subscriptions, last_sub: last_sub}
+    state = %{state | subscriptions: subscriptions, rate_limit: rate_limit}
 
     {:reply, {:text, encoded_message}, state}
-  end
-
-  defp check_rate(prev_rate_ms, actual_rate_ms) do
-    rate_diff = actual_rate_ms - prev_rate_ms
-
-    case rate_diff > @rate_limit_interval do
-      true ->
-        actual_rate_ms
-
-      false ->
-        Process.sleep(rate_diff)
-        actual_rate()
-    end
-  end
-
-  defp actual_rate() do
-    DateTime.utc_now()
-    |> DateTime.to_unix(:millisecond)
   end
 
   defp encode_streaming_command({method, nil}, streaming_session_id) do

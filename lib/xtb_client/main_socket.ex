@@ -12,11 +12,11 @@ defmodule XtbClient.MainSocket do
 
   alias XtbClient.{AccountType}
   alias XtbClient.Messages
+  alias XtbClient.RateLimit
 
   require Logger
 
   @ping_interval 30 * 1000
-  @rate_limit_interval 200
 
   defmodule Config do
     @type t :: %{
@@ -48,7 +48,7 @@ defmodule XtbClient.MainSocket do
       :password,
       :app_name,
       :queries,
-      :last_query
+      :rate_limit
     ]
     defstruct url: nil,
               account_type: nil,
@@ -57,7 +57,7 @@ defmodule XtbClient.MainSocket do
               app_name: nil,
               stream_session_id: nil,
               queries: %{},
-              last_query: 0
+              rate_limit: nil
   end
 
   @doc """
@@ -75,7 +75,7 @@ defmodule XtbClient.MainSocket do
       password: password,
       app_name: app_name,
       queries: %{},
-      last_query: actual_rate()
+      rate_limit: RateLimit.new(200)
     }
 
     WebSockex.start_link(url, __MODULE__, state)
@@ -159,9 +159,9 @@ defmodule XtbClient.MainSocket do
   @impl WebSockex
   def handle_cast(
         {:query, {caller, ref, method}},
-        %State{queries: queries, last_query: last_query} = state
+        %State{queries: queries, rate_limit: rate_limit} = state
       ) do
-    last_query = check_rate(last_query, actual_rate())
+    rate_limit = RateLimit.check_rate(rate_limit)
 
     message = encode_command(method, ref)
     queries = Map.put(queries, ref, {:query, caller, ref, method})
@@ -169,7 +169,7 @@ defmodule XtbClient.MainSocket do
     state = %{
       state
       | queries: queries,
-        last_query: last_query
+        rate_limit: rate_limit
     }
 
     {:reply, {:text, message}, state}
@@ -178,9 +178,9 @@ defmodule XtbClient.MainSocket do
   @impl WebSockex
   def handle_cast(
         {:query, {caller, ref, method, params}},
-        %State{queries: queries, last_query: last_query} = state
+        %State{queries: queries, rate_limit: rate_limit} = state
       ) do
-    last_query = check_rate(last_query, actual_rate())
+    rate_limit = RateLimit.check_rate(rate_limit)
 
     message = encode_command(method, params, ref)
     queries = Map.put(queries, ref, {:query, caller, ref, method})
@@ -188,7 +188,7 @@ defmodule XtbClient.MainSocket do
     state = %{
       state
       | queries: queries,
-        last_query: last_query
+        rate_limit: rate_limit
     }
 
     {:reply, {:text, message}, state}
@@ -197,24 +197,6 @@ defmodule XtbClient.MainSocket do
   @impl WebSockex
   def handle_cast({:send, frame}, state) do
     {:reply, frame, state}
-  end
-
-  defp check_rate(prev_rate_ms, actual_rate_ms) do
-    rate_diff = actual_rate_ms - prev_rate_ms
-
-    case rate_diff > @rate_limit_interval do
-      true ->
-        actual_rate_ms
-
-      false ->
-        Process.sleep(rate_diff)
-        actual_rate()
-    end
-  end
-
-  defp actual_rate() do
-    DateTime.utc_now()
-    |> DateTime.to_unix(:millisecond)
   end
 
   defp encode_command(type) do
