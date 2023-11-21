@@ -2,7 +2,7 @@ defmodule XtbClient.Messages.Trades do
   defmodule Query do
     @moduledoc """
     Info about the query for trades.
-    
+
     ## Parameters
     - `openedOnly` if true then only opened trades will be returned.
     """
@@ -12,7 +12,6 @@ defmodule XtbClient.Messages.Trades do
           }
 
     @enforce_keys [:openedOnly]
-
     @derive Jason.Encoder
     defstruct openedOnly: nil
 

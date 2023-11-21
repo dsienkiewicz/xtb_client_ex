@@ -1,31 +1,4 @@
 defmodule XtbClient.Messages.SymbolInfo do
-  defmodule Query do
-    @moduledoc """
-    Info about the query for symbol info.
-
-    ## Parameters
-    - `symbol` symbol name.
-    """
-
-    @type t :: %__MODULE__{
-            symbol: String.t()
-          }
-
-    @enforce_keys [:symbol]
-
-    @derive Jason.Encoder
-    defstruct symbol: ""
-
-    def new(symbol)
-        when is_binary(symbol) do
-      %__MODULE__{
-        symbol: symbol
-      }
-    end
-  end
-
-  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
-
   @moduledoc """
   Information relevant to the symbol of security.
 
@@ -82,6 +55,32 @@ defmodule XtbClient.Messages.SymbolInfo do
   ## Handled Api methods
   - `getSymbol`
   """
+
+  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
+
+  defmodule Query do
+    @moduledoc """
+    Info about the query for symbol info.
+
+    ## Parameters
+    - `symbol` symbol name.
+    """
+
+    @type t :: %__MODULE__{
+            symbol: String.t()
+          }
+
+    @enforce_keys [:symbol]
+    @derive Jason.Encoder
+    defstruct symbol: ""
+
+    def new(symbol)
+        when is_binary(symbol) do
+      %__MODULE__{
+        symbol: symbol
+      }
+    end
+  end
 
   @type t :: %__MODULE__{
           ask: float(),
@@ -180,7 +179,6 @@ defmodule XtbClient.Messages.SymbolInfo do
     :trailing_enabled,
     :type
   ]
-
   @derive Jason.Encoder
   defstruct ask: 0.0,
             bid: 0.0,
@@ -278,9 +276,8 @@ defmodule XtbClient.Messages.SymbolInfo do
         "type" => type
       })
       when is_number(ask) and is_number(bid) and
-             is_binary(category_name) and is_number(contract_size) and
-             is_binary(currency) and is_boolean(currency_pair) and is_binary(currency_profit) and
-             is_binary(description) and is_binary(group_name) and
+             is_number(contract_size) and
+             is_boolean(currency_pair) and
              is_number(high) and is_number(initial_margin) and is_number(instant_max_volume) and
              is_number(leverage) and is_boolean(long_only) and
              is_number(lot_max) and is_number(lot_min) and is_number(lot_step) and
@@ -294,20 +291,20 @@ defmodule XtbClient.Messages.SymbolInfo do
              is_number(swap_rollover_3_days) and
              is_boolean(swap_enabled) and is_number(swap_long) and is_number(swap_short) and
              is_number(swap_type) and
-             is_binary(symbol) and is_number(tick_size) and is_number(tick_value) and
-             is_number(time_value) and is_binary(time_string) and
+             is_number(tick_size) and is_number(tick_value) and
+             is_number(time_value) and
              is_boolean(trailing_enabled) and is_number(type) do
     %__MODULE__{
       ask: ask,
       bid: bid,
-      category_name: category_name,
+      category_name: category_name || "",
       contract_size: contract_size,
-      currency: currency,
+      currency: currency || "",
       currency_pair: currency_pair,
-      currency_profit: currency_profit,
-      description: description,
+      currency_profit: currency_profit || "",
+      description: description || "",
       expiration: expiration,
-      group_name: group_name,
+      group_name: group_name || "",
       high: high,
       initial_margin: initial_margin,
       instant_max_volume: instant_max_volume,
@@ -337,21 +334,13 @@ defmodule XtbClient.Messages.SymbolInfo do
       swap_long: swap_long,
       swap_short: swap_short,
       swap_type: swap_type,
-      symbol: symbol,
+      symbol: symbol || "",
       tick_size: tick_size,
       tick_value: tick_value,
       time: DateTime.from_unix!(time_value, :millisecond),
-      time_string: time_string,
+      time_string: time_string || "",
       trailing_enabled: trailing_enabled,
       type: type
     }
-  end
-
-  def match(method, data) when method in ["getSymbol"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

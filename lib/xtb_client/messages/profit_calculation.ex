@@ -1,7 +1,15 @@
 defmodule XtbClient.Messages.ProfitCalculation do
-  defmodule Query do
-    alias XtbClient.Messages.{Operation}
+  @moduledoc """
+  Query result for profit calculation.
 
+  ## Parameters
+  - `profit` profit in account currency.
+
+  ## Handled Api methods
+  - `getProfitCalculation`
+  """
+
+  defmodule Query do
     @moduledoc """
     Info about query for calculation of profit.
 
@@ -13,6 +21,8 @@ defmodule XtbClient.Messages.ProfitCalculation do
     - `volume` volume in lots.
     """
 
+    alias XtbClient.Messages.Operation
+
     @type t :: %__MODULE__{
             closePrice: float(),
             cmd: Operation.t(),
@@ -22,7 +32,6 @@ defmodule XtbClient.Messages.ProfitCalculation do
           }
 
     @enforce_keys [:closePrice, :cmd, :openPrice, :symbol, :volume]
-
     @derive Jason.Encoder
     defstruct closePrice: 0.0,
               cmd: nil,
@@ -49,22 +58,11 @@ defmodule XtbClient.Messages.ProfitCalculation do
     end
   end
 
-  @moduledoc """
-  Query result for profit calculation.
-
-  ## Parameters
-  - `profit` profit in account currency.
-
-  ## Handled Api methods
-  - `getProfitCalculation`
-  """
-
   @type t :: %__MODULE__{
           profit: float()
         }
 
   @enforce_keys [:profit]
-
   @derive Jason.Encoder
   defstruct profit: 0.0
 
@@ -72,13 +70,5 @@ defmodule XtbClient.Messages.ProfitCalculation do
     %__MODULE__{
       profit: profit
     }
-  end
-
-  def match(method, data) when method in ["getProfitCalculation"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

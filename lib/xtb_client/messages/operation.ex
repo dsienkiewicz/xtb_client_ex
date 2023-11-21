@@ -18,7 +18,7 @@ defmodule XtbClient.Messages.Operation do
   @doc """
   Parse an integer number as valid operation atom.
   """
-  @spec parse(operation_code()) :: t()
+  @spec parse(value :: operation_code()) :: t()
   def parse(value) when value in 0..7 do
     parse_operation(value)
   end
@@ -39,7 +39,7 @@ defmodule XtbClient.Messages.Operation do
   @doc """
   Format operation atom as integer value.
   """
-  @spec format(t()) :: operation_code()
+  @spec format(operation :: t()) :: operation_code()
   def format(operation) when is_atom(operation) do
     format_operation(operation)
   end

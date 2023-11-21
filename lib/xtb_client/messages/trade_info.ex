@@ -1,6 +1,4 @@
 defmodule XtbClient.Messages.TradeInfo do
-  alias XtbClient.Messages.Operation
-
   @moduledoc """
   Info about the trade that has happened.
 
@@ -34,6 +32,8 @@ defmodule XtbClient.Messages.TradeInfo do
   - `type` type,
   - `volume` volume in lots.
   """
+
+  alias XtbClient.Messages.Operation
 
   @type t :: %__MODULE__{
           close_price: float(),
@@ -91,7 +91,7 @@ defmodule XtbClient.Messages.TradeInfo do
     :take_profit,
     :volume
   ]
-
+  @derive Jason.Encoder
   defstruct close_price: 0.0,
             close_time: nil,
             closed: nil,
@@ -127,11 +127,7 @@ defmodule XtbClient.Messages.TradeInfo do
           "type" => type
         } = args
       ) do
-    value =
-      args
-      |> Map.delete("state")
-      |> Map.delete("type")
-      |> __MODULE__.new()
+    value = args |> Map.delete(["state", "type"]) |> new()
 
     %{value | state: state, type: type}
   end
@@ -146,12 +142,7 @@ defmodule XtbClient.Messages.TradeInfo do
       when is_number(spread) and
              is_number(taxes) and
              is_integer(timestamp_value) do
-    value =
-      args
-      |> Map.delete("spread")
-      |> Map.delete("taxes")
-      |> Map.delete("timestamp")
-      |> __MODULE__.new()
+    value = args |> Map.delete(["spread", "taxes", "timestamp"]) |> new()
 
     %{
       value
@@ -206,9 +197,9 @@ defmodule XtbClient.Messages.TradeInfo do
           close_time_value,
       closed: closed,
       operation: Operation.parse(operation),
-      comment: comment,
+      comment: comment || "",
       commission: commission,
-      custom_comment: custom_comment,
+      custom_comment: custom_comment || "",
       digits: digits,
       expiration:
         (not is_nil(expiration_value) && DateTime.from_unix!(expiration_value, :millisecond)) ||
@@ -224,7 +215,7 @@ defmodule XtbClient.Messages.TradeInfo do
       profit: profit,
       stop_loss: stop_loss,
       storage: storage,
-      symbol: symbol,
+      symbol: symbol || "",
       take_profit: take_profit,
       volume: volume
     }

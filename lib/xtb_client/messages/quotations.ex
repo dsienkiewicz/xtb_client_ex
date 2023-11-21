@@ -18,8 +18,7 @@ defmodule XtbClient.Messages.Quotations do
             maxLevel: integer()
           }
 
-    @enforce_keys [:symbol]
-
+    @enforce_keys [:symbol, :minArrivalTime, :maxLevel]
     @derive Jason.Encoder
     defstruct symbol: "",
               minArrivalTime: 0,
@@ -32,37 +31,17 @@ defmodule XtbClient.Messages.Quotations do
           } = args
         )
         when is_integer(min_arrival_time) and is_integer(max_level) do
-      value =
-        args
-        |> Map.delete(:min_arrival_time)
-        |> Map.delete(:max_level)
-        |> __MODULE__.new()
+      value = args |> Map.delete([:min_arrival_time, :max_level]) |> new()
 
       %{value | minArrivalTime: min_arrival_time, maxLevel: max_level}
     end
 
     def new(%{symbol: symbol}) when is_binary(symbol) do
       %__MODULE__{
-        symbol: symbol
+        symbol: symbol,
+        minArrivalTime: 0,
+        maxLevel: nil
       }
     end
-  end
-
-  alias XtbClient.Messages.TickPrice
-
-  @moduledoc """
-  Query result for list of `XtbClient.Messages.TickPrice`s.
-
-  ## Handled Api methods
-  - `getTickPrices`
-  """
-
-  def match(method, data)
-      when method in ["getTickPrices"] and is_map(data) and map_size(data) > 1 do
-    {:ok, TickPrice.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

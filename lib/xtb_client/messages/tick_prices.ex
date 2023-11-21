@@ -1,4 +1,16 @@
 defmodule XtbClient.Messages.TickPrices do
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TickPrice`s.
+
+  ## Parameters
+  - `data` array or results.
+
+  ## Handled Api methods
+  - `getTickPrices`
+  """
+
+  alias XtbClient.Messages.TickPrice
+
   defmodule Query do
     @moduledoc """
     Info about the query for tick prices.
@@ -16,7 +28,6 @@ defmodule XtbClient.Messages.TickPrices do
           }
 
     @enforce_keys [:level, :symbols, :timestamp]
-
     @derive Jason.Encoder
     defstruct level: nil,
               symbols: [],
@@ -36,24 +47,12 @@ defmodule XtbClient.Messages.TickPrices do
     end
   end
 
-  alias XtbClient.Messages.TickPrice
-
-  @moduledoc """
-  Query result for list of `XtbClient.Messages.TickPrice`s.
-
-  ## Parameters
-  - `data` array or results.
-
-  ## Handled Api methods
-  - `getTickPrices`
-  """
-
   @type t :: %__MODULE__{
           data: [TickPrice.t()]
         }
 
   @enforce_keys [:data]
-
+  @derive Jason.Encoder
   defstruct data: []
 
   def new(data)
@@ -63,13 +62,5 @@ defmodule XtbClient.Messages.TickPrices do
         data
         |> Enum.map(&TickPrice.new(&1))
     }
-  end
-
-  def match(method, %{"quotations" => data}) when method in ["getTickPrices"] and is_list(data) do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

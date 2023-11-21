@@ -1,30 +1,4 @@
 defmodule XtbClient.Messages.TradeTransactionStatus do
-  defmodule Query do
-    @moduledoc """
-    Info about query for trade transaction status.
-
-    ## Parameters
-    - `order` unique order number.
-    """
-
-    @type t :: %__MODULE__{
-            order: integer()
-          }
-
-    @enforce_keys [:order]
-
-    @derive Jason.Encoder
-    defstruct order: 0
-
-    def new(order) when is_integer(order) do
-      %__MODULE__{
-        order: order
-      }
-    end
-  end
-
-  alias XtbClient.Messages.TransactionStatus
-
   @moduledoc """
   Info about the status of particular transaction.
 
@@ -40,6 +14,31 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   - `tradeTransactionStatus`
   """
 
+  alias XtbClient.Messages.TransactionStatus
+
+  defmodule Query do
+    @moduledoc """
+    Info about query for trade transaction status.
+
+    ## Parameters
+    - `order` unique order number.
+    """
+
+    @type t :: %__MODULE__{
+            order: integer()
+          }
+
+    @enforce_keys [:order]
+    @derive Jason.Encoder
+    defstruct order: 0
+
+    def new(order) when is_integer(order) do
+      %__MODULE__{
+        order: order
+      }
+    end
+  end
+
   @type t :: %__MODULE__{
           ask: float(),
           bid: float(),
@@ -49,6 +48,8 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
           status: TransactionStatus.t()
         }
 
+  @enforce_keys [:ask, :bid, :custom_comment, :message, :order, :status]
+  @derive Jason.Encoder
   defstruct ask: 0.0,
             bid: 0.0,
             custom_comment: "",
@@ -65,23 +66,14 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
         "requestStatus" => status
       })
       when is_number(ask) and is_number(bid) and
-             is_binary(comment) and
              is_integer(order) and is_integer(status) do
     %__MODULE__{
       ask: ask,
       bid: bid,
-      custom_comment: comment,
-      message: message,
+      custom_comment: comment || "",
+      message: message || "",
       order: order,
       status: TransactionStatus.parse(status)
     }
-  end
-
-  def match(method, data) when method in ["tradeTransactionStatus"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

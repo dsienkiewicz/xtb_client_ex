@@ -1,6 +1,4 @@
 defmodule XtbClient.Messages.TradingHour do
-  alias XtbClient.Messages.{Quote}
-
   @moduledoc """
   Info about one available trading hour.
 
@@ -10,6 +8,8 @@ defmodule XtbClient.Messages.TradingHour do
   - `trading` array of `XtbClient.Messages.Quote`s representing available trading hours.
   """
 
+  alias XtbClient.Messages.Quote
+
   @type t :: %__MODULE__{
           quotes: [Quote.t()],
           symbol: String.t(),
@@ -17,7 +17,6 @@ defmodule XtbClient.Messages.TradingHour do
         }
 
   @enforce_keys [:quotes, :symbol, :trading]
-
   @derive Jason.Encoder
   defstruct quotes: [],
             symbol: "",
@@ -28,10 +27,10 @@ defmodule XtbClient.Messages.TradingHour do
         "symbol" => symbol,
         "trading" => trading
       })
-      when is_list(quotes) and is_binary(symbol) and is_list(trading) do
+      when is_list(quotes) and is_list(trading) do
     %__MODULE__{
       quotes: quotes |> Enum.map(&Quote.new(&1)),
-      symbol: symbol,
+      symbol: symbol || "",
       trading: trading |> Enum.map(&Quote.new(&1))
     }
   end

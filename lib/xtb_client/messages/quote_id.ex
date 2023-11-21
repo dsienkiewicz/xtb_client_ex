@@ -9,7 +9,7 @@ defmodule XtbClient.Messages.QuoteId do
   @doc """
   Parse an integer number as valid atom for quote ID.
   """
-  @spec parse(quote_code()) :: t()
+  @spec parse(value :: quote_code()) :: t()
   def parse(value) when is_integer(value) and value in [1, 2, 3, 4, 5, 6] do
     parse_quote_id(value)
   end

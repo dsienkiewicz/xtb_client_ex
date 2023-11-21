@@ -9,7 +9,7 @@ defmodule XtbClient.Messages.MarginMode do
   @doc """
   Parse an integer value as a valid atom for margin mode.
   """
-  @spec parse(margin_code()) :: t()
+  @spec parse(value :: margin_code()) :: t()
   def parse(value) when is_number(value) and value in [101, 102, 103, 104] do
     parse_margin_mode(value)
   end

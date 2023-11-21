@@ -1,6 +1,4 @@
 defmodule XtbClient.Messages.Candle do
-  alias XtbClient.Messages.QuoteId
-
   @moduledoc """
   Info representing aggregated price & volume values for candle.
 
@@ -17,6 +15,8 @@ defmodule XtbClient.Messages.Candle do
   - `quote_id` source of price, see `XtbClient.Messages.QuoteId`,
   - `symbol` symbol name.
   """
+
+  alias XtbClient.Messages.QuoteId
 
   @type t :: %__MODULE__{
           open: float(),
@@ -41,7 +41,6 @@ defmodule XtbClient.Messages.Candle do
     :quote_id,
     :symbol
   ]
-
   @derive Jason.Encoder
   defstruct open: 0.0,
             high: 0.0,
@@ -55,29 +54,30 @@ defmodule XtbClient.Messages.Candle do
 
   def new(
         %{
-          "open" => open,
-          "high" => high,
-          "low" => low,
-          "close" => close,
           "vol" => vol,
           "ctm" => ctm_value,
-          "ctmString" => ctm_string
-        },
-        digits
+          "ctmString" => ctm_string,
+          "symbol" => symbol
+        } = args
       )
-      when is_number(open) and is_number(high) and is_number(low) and is_number(close) and
-             is_number(vol) and is_number(ctm_value) and is_binary(ctm_string) and
-             is_number(digits) do
-    %__MODULE__{
-      open: to_base_currency(open, digits),
-      high: to_base_currency(open + high, digits),
-      low: to_base_currency(open + low, digits),
-      close: to_base_currency(open + close, digits),
-      vol: vol,
-      ctm: DateTime.from_unix!(ctm_value, :millisecond),
-      ctm_string: ctm_string,
-      quote_id: nil,
-      symbol: ""
+      when is_number(vol) and is_number(ctm_value) do
+    value = args |> Map.delete(["vol", "ctm", "ctmString", "symbol"]) |> new()
+
+    %{
+      value
+      | vol: vol,
+        ctm: DateTime.from_unix!(ctm_value, :millisecond),
+        ctm_string: ctm_string || "",
+        symbol: symbol || ""
+    }
+  end
+
+  def new(%{"quoteId" => quote_id} = args) when is_integer(quote_id) do
+    value = args |> Map.delete(["quoteId"]) |> new()
+
+    %{
+      value
+      | quote_id: QuoteId.parse(quote_id)
     }
   end
 
@@ -85,28 +85,43 @@ defmodule XtbClient.Messages.Candle do
         "open" => open,
         "high" => high,
         "low" => low,
-        "close" => close,
-        "vol" => vol,
-        "ctm" => ctm_value,
-        "ctmString" => ctm_string,
-        "quoteId" => quote_id,
-        "symbol" => symbol
+        "close" => close
       })
-      when is_number(open) and is_number(high) and is_number(low) and is_number(close) and
-             is_number(vol) and
-             is_number(ctm_value) and is_binary(ctm_string) and
-             is_integer(quote_id) and
-             is_binary(symbol) do
+      when is_number(open) and is_number(high) and is_number(low) and is_number(close) do
     %__MODULE__{
       open: open,
       high: high,
       low: low,
       close: close,
-      vol: vol,
-      ctm: DateTime.from_unix!(ctm_value, :millisecond),
-      ctm_string: ctm_string,
-      quote_id: QuoteId.parse(quote_id),
-      symbol: symbol
+      vol: 0.0,
+      ctm: nil,
+      ctm_string: nil,
+      quote_id: nil,
+      symbol: nil
+    }
+  end
+
+  def new(
+        %{
+          "open" => open,
+          "high" => high,
+          "low" => low,
+          "close" => close
+        },
+        digits
+      )
+      when is_number(open) and is_number(high) and is_number(low) and is_number(close) and
+             is_number(digits) do
+    %__MODULE__{
+      open: to_base_currency(open, digits),
+      high: to_base_currency(open + high, digits),
+      low: to_base_currency(open + low, digits),
+      close: to_base_currency(open + close, digits),
+      vol: 0.0,
+      ctm: nil,
+      ctm_string: nil,
+      quote_id: nil,
+      symbol: nil
     }
   end
 

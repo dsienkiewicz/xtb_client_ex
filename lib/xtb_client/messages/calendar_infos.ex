@@ -1,21 +1,22 @@
 defmodule XtbClient.Messages.CalendarInfos do
-  alias XtbClient.Messages.{CalendarInfo}
-
   @moduledoc """
   Query result for list of `XtbClient.Messages.CalendarInfo`s.
-  
+
   ## Parameters
   - `data` array or results.
-  
+
   ## Handled Api methods
   - `getCalendar`
   """
+
+  alias XtbClient.Messages.CalendarInfo
 
   @type t :: %__MODULE__{
           data: [CalendarInfo.t()]
         }
 
   @enforce_keys [:data]
+  @derive Jason.Encoder
   defstruct data: []
 
   def new(data) when is_list(data) do
@@ -24,13 +25,5 @@ defmodule XtbClient.Messages.CalendarInfos do
         data
         |> Enum.map(&CalendarInfo.new(&1))
     }
-  end
-
-  def match(method, data) when method in ["getCalendar"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

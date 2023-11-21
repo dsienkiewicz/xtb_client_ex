@@ -1,7 +1,15 @@
 defmodule XtbClient.Messages.TradeTransaction do
-  defmodule Command do
-    alias XtbClient.Messages.{Operation, TradeType}
+  @moduledoc """
+  Info about realized trade transaction.
 
+  ## Parameters
+  - `order` holds info about order number, needed later for verification about order status.
+
+  ## Handled Api methods
+  - `tradeTransaction`
+  """
+
+  defmodule Command do
     @moduledoc """
     Info about command to trade the transaction.
 
@@ -18,6 +26,8 @@ defmodule XtbClient.Messages.TradeTransaction do
     - `type` trade transaction type, see `XtbClient.Messages.TradeType`,
     - `volume` trade volume.
     """
+
+    alias XtbClient.Messages.{Operation, TradeType}
 
     @type t :: %__MODULE__{
             cmd: integer(),
@@ -98,35 +108,17 @@ defmodule XtbClient.Messages.TradeTransaction do
     end
   end
 
-  @moduledoc """
-  Info about realized trade transaction.
-
-  ## Parameters
-  - `order` holds info about order number, needed later for verification about order status.
-
-  ## Handled Api methods
-  - `tradeTransaction`
-  """
-
   @type t :: %__MODULE__{
           order: integer()
         }
 
   @enforce_keys [:order]
-
+  @derive Jason.Encoder
   defstruct order: 0
 
   def new(%{"order" => order}) when is_integer(order) do
     %__MODULE__{
       order: order
     }
-  end
-
-  def match(method, data) when method in ["tradeTransaction"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

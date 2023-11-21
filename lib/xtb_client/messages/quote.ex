@@ -1,14 +1,14 @@
 defmodule XtbClient.Messages.Quote do
-  alias XtbClient.Messages.Day
-
   @moduledoc """
   Info about quote for given day.
-  
+
   Parameters:
   - `day` day of week,
   - `from` start time in `Time` CET / CEST time zone (see Daylight Saving Time, DST),
   - `to` end time in `Time` CET / CEST time zone (see Daylight Saving Time, DST).
   """
+
+  alias XtbClient.Messages.Day
 
   @type t :: %__MODULE__{
           day: Day.t(),
@@ -17,7 +17,6 @@ defmodule XtbClient.Messages.Quote do
         }
 
   @enforce_keys [:day, :from, :to]
-
   @derive Jason.Encoder
   defstruct day: nil,
             from: nil,

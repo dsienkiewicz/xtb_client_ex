@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.Step do
   @moduledoc """
   Info about one step rule.
-  
+
   ## Parameters
   - `from_value` lower border of the volume range,
   - `step` 	lotStep value in the given volume range.
@@ -13,7 +13,6 @@ defmodule XtbClient.Messages.Step do
         }
 
   @enforce_keys [:from_value, :step]
-
   @derive Jason.Encoder
   defstruct from_value: 0.0,
             step: 0.0

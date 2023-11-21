@@ -1,7 +1,5 @@
 defmodule XtbClient.Messages.ChartLast do
   defmodule Query do
-    alias XtbClient.Messages.Period
-
     @moduledoc """
     Parameters for last chart query.
 
@@ -11,6 +9,8 @@ defmodule XtbClient.Messages.ChartLast do
     - `symbol` symbol name.
     """
 
+    alias XtbClient.Messages.Period
+
     @type t :: %__MODULE__{
             period: Period.minute_period(),
             start: integer(),
@@ -18,7 +18,6 @@ defmodule XtbClient.Messages.ChartLast do
           }
 
     @enforce_keys [:period, :start, :symbol]
-
     @derive Jason.Encoder
     defstruct period: :h1,
               start: 0,
@@ -30,7 +29,7 @@ defmodule XtbClient.Messages.ChartLast do
     @spec new(%{
             :period => Period.t(),
             :start => Calendar.datetime(),
-            :symbol => binary
+            :symbol => String.t()
           }) :: XtbClient.Messages.ChartLast.Query.t()
     def new(%{period: period, start: start, symbol: symbol})
         when is_atom(period) and not is_nil(start) and is_binary(symbol) do

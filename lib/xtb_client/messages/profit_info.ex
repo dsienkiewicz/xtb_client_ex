@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.ProfitInfo do
   @moduledoc """
   Result of profit calculation.
-  
+
   ## Parameters
   - `order_id` order number,
   - `transaction_id` transaction ID,
@@ -10,7 +10,7 @@ defmodule XtbClient.Messages.ProfitInfo do
   - `market_value` market value,
   - `profit_calc_price` profit calc price,
   - `profit_recalc_price` profit recalc price.
-  
+
   ## Handled Api methods
   - `getProfits`
   """
@@ -34,7 +34,6 @@ defmodule XtbClient.Messages.ProfitInfo do
     :profit_calc_price,
     :profit_recalc_price
   ]
-
   @derive Jason.Encoder
   defstruct order_id: nil,
             transaction_id: nil,
@@ -66,13 +65,5 @@ defmodule XtbClient.Messages.ProfitInfo do
       profit_calc_price: profit_calc_price,
       profit_recalc_price: profit_recalc_price
     }
-  end
-
-  def match(method, data) when method in ["getProfits"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end
