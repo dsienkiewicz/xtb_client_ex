@@ -537,7 +537,7 @@ defmodule XtbClient.Connection do
         {:response, ref, %RateInfos{data: data} = resp} = _message,
         %State{clients: clients} = state
       ) do
-    {_client, _method, %{info: %ChartRange.Query{symbol: symbol}}} = Map.get(clients, ref)
+    {_client, _method, %{info: %{symbol: symbol}}} = Map.get(clients, ref)
 
     resp = %RateInfos{
       resp
