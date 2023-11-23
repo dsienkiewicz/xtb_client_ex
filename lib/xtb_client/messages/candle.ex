@@ -56,19 +56,26 @@ defmodule XtbClient.Messages.Candle do
         %{
           "vol" => vol,
           "ctm" => ctm_value,
-          "ctmString" => ctm_string,
-          "symbol" => symbol
+          "ctmString" => ctm_string
         } = args
       )
       when is_number(vol) and is_number(ctm_value) do
-    value = args |> Map.drop(["vol", "ctm", "ctmString", "symbol"]) |> new()
+    value = args |> Map.drop(["vol", "ctm", "ctmString"]) |> new()
 
     %{
       value
       | vol: vol,
         ctm: DateTime.from_unix!(ctm_value, :millisecond),
-        ctm_string: ctm_string || "",
-        symbol: symbol || ""
+        ctm_string: ctm_string || ""
+    }
+  end
+
+  def new(%{"symbol" => symbol} = args) do
+    value = args |> Map.drop(["symbol"]) |> new()
+
+    %{
+      value
+      | symbol: symbol || ""
     }
   end
 
@@ -107,22 +114,19 @@ defmodule XtbClient.Messages.Candle do
           "high" => high,
           "low" => low,
           "close" => close
-        },
+        } = args,
         digits
       )
       when is_number(open) and is_number(high) and is_number(low) and is_number(close) and
              is_number(digits) do
-    %__MODULE__{
-      open: to_base_currency(open, digits),
-      high: to_base_currency(open + high, digits),
-      low: to_base_currency(open + low, digits),
-      close: to_base_currency(open + close, digits),
-      vol: 0.0,
-      ctm: nil,
-      ctm_string: nil,
-      quote_id: nil,
-      symbol: nil
-    }
+    args
+    |> Map.merge(%{
+      "open" => to_base_currency(open, digits),
+      "high" => to_base_currency(open + high, digits),
+      "low" => to_base_currency(open + low, digits),
+      "close" => to_base_currency(open + close, digits)
+    })
+    |> new()
   end
 
   defp to_base_currency(value, digits) do

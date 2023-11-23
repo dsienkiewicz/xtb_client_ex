@@ -115,11 +115,13 @@ defmodule XtbClient.ConnectionTest do
   end
 
   test "get chart range", %{pid: pid} do
+    now = DateTime.utc_now()
+
     args = %{
       range:
         DateRange.new(%{
-          from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
-          to: DateTime.utc_now()
+          from: DateTime.add(now, -2 * 30 * 24 * 60 * 60),
+          to: now
         }),
       period: :h1,
       symbol: "EURPLN"
@@ -131,7 +133,28 @@ defmodule XtbClient.ConnectionTest do
     assert %RateInfos{} = result
     assert is_number(result.digits)
     assert [elem | _] = result.data
-    assert %Candle{} = elem
+
+    assert %Candle{
+             symbol: symbol,
+             open: open,
+             high: high,
+             low: low,
+             close: close,
+             vol: vol,
+             ctm: ctm,
+             ctm_string: ctm_string,
+             quote_id: quote_id
+           } = elem
+
+    assert "EURPLN" == symbol
+    assert is_number(open)
+    assert is_number(high)
+    assert is_number(low)
+    assert is_number(close)
+    assert is_number(vol)
+    assert DateTime.before?(ctm, now)
+    assert is_binary(ctm_string)
+    refute quote_id
   end
 
   test "get commission definition", %{pid: pid} do
