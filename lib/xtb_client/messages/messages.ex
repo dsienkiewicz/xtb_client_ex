@@ -59,11 +59,11 @@ defmodule XtbClient.Messages do
 
   def decode_message("getAllSymbols", data), do: SymbolInfos.new(data)
 
-  def decode_message("getTickPrices", data) when is_map(data) and map_size(data) > 1,
-    do: TickPrice.new(data)
-
   def decode_message("getTickPrices", %{"quotations" => data}) when is_list(data),
     do: TickPrices.new(data)
+
+  def decode_message("getTickPrices", data) when is_map(data) and map_size(data) > 1,
+    do: TickPrice.new(data)
 
   def decode_message("getTradeRecords", data), do: TradeInfos.new(data)
   def decode_message("getTrades", data), do: TradeInfos.new(data)

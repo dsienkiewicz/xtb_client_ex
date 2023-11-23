@@ -44,7 +44,7 @@ defmodule XtbClient.Messages.UserInfo do
             trailing_stop: false
 
   def new(%{"spreadType" => spread_type} = args) do
-    value = args |> Map.delete("spreadType") |> __MODULE__.new()
+    value = args |> Map.drop(["spreadType"]) |> __MODULE__.new()
 
     %{value | spread_type: spread_type || ""}
   end

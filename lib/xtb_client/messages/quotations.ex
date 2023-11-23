@@ -31,7 +31,7 @@ defmodule XtbClient.Messages.Quotations do
           } = args
         )
         when is_integer(min_arrival_time) and is_integer(max_level) do
-      value = args |> Map.delete([:min_arrival_time, :max_level]) |> new()
+      value = args |> Map.drop([:min_arrival_time, :max_level]) |> new()
 
       %{value | minArrivalTime: min_arrival_time, maxLevel: max_level}
     end

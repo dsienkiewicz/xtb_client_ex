@@ -38,7 +38,7 @@ defmodule XtbClient.Messages.ChartRange do
 
     def new(%{ticks: ticks} = args)
         when is_number(ticks) do
-      value = args |> Map.delete(:ticks) |> new()
+      value = args |> Map.drop([:ticks]) |> new()
 
       %{value | ticks: ticks}
     end

@@ -61,7 +61,7 @@ defmodule XtbClient.Messages.Candle do
         } = args
       )
       when is_number(vol) and is_number(ctm_value) do
-    value = args |> Map.delete(["vol", "ctm", "ctmString", "symbol"]) |> new()
+    value = args |> Map.drop(["vol", "ctm", "ctmString", "symbol"]) |> new()
 
     %{
       value
@@ -73,7 +73,7 @@ defmodule XtbClient.Messages.Candle do
   end
 
   def new(%{"quoteId" => quote_id} = args) when is_integer(quote_id) do
-    value = args |> Map.delete(["quoteId"]) |> new()
+    value = args |> Map.drop(["quoteId"]) |> new()
 
     %{
       value

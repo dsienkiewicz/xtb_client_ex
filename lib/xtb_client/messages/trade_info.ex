@@ -127,7 +127,7 @@ defmodule XtbClient.Messages.TradeInfo do
           "type" => type
         } = args
       ) do
-    value = args |> Map.delete(["state", "type"]) |> new()
+    value = args |> Map.drop(["state", "type"]) |> new()
 
     %{value | state: state, type: type}
   end
@@ -142,7 +142,7 @@ defmodule XtbClient.Messages.TradeInfo do
       when is_number(spread) and
              is_number(taxes) and
              is_integer(timestamp_value) do
-    value = args |> Map.delete(["spread", "taxes", "timestamp"]) |> new()
+    value = args |> Map.drop(["spread", "taxes", "timestamp"]) |> new()
 
     %{
       value

@@ -72,7 +72,7 @@ defmodule XtbClient.Messages.TickPrice do
         } = args
       )
       when is_integer(exemode) do
-    value = args |> Map.delete(["exemode"]) |> new()
+    value = args |> Map.drop(["exemode"]) |> new()
 
     %{value | exe_mode: exemode}
   end
@@ -83,7 +83,7 @@ defmodule XtbClient.Messages.TickPrice do
         } = args
       )
       when is_integer(quote_id) do
-    value = args |> Map.delete(["quoteId"]) |> new()
+    value = args |> Map.drop(["quoteId"]) |> new()
 
     %{value | quote_id: QuoteId.parse(quote_id)}
   end
