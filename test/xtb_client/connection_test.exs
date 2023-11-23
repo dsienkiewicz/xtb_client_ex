@@ -152,7 +152,7 @@ defmodule XtbClient.ConnectionTest do
     assert is_number(low)
     assert is_number(close)
     assert is_number(vol)
-    assert DateTime.before?(ctm, now)
+    assert DateTime.compare(ctm, now) == :lt
     assert is_binary(ctm_string)
     refute quote_id
   end
