@@ -58,6 +58,24 @@ defmodule XtbClient.MainSocket do
               stream_session_id: nil,
               queries: %{},
               rate_limit: nil
+
+    defimpl Inspect do
+      def inspect(state, opts) do
+        Inspect.Map.inspect(
+          %{
+            url: state.url,
+            account_type: state.account_type,
+            user: "<<REDACTED>>",
+            password: "<<REDACTED>>",
+            app_name: state.app_name,
+            stream_session_id: state.stream_session_id,
+            queries: state.queries,
+            rate_limit: state.rate_limit
+          },
+          opts
+        )
+      end
+    end
   end
 
   @doc """
