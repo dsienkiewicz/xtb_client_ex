@@ -118,11 +118,10 @@ defmodule XtbClient.Connection do
   @impl true
   def init(opts) do
     {:ok, mpid} = MainSocket.start_link(opts)
+    Process.flag(:trap_exit, true)
 
     Process.sleep(500)
     MainSocket.stream_session_id(mpid, self())
-
-    Process.flag(:trap_exit, true)
 
     type = get_in(opts, [:type])
     url = get_in(opts, [:url])

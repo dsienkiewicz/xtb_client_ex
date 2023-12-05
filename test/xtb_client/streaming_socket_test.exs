@@ -1,6 +1,6 @@
 defmodule XtbClient.StreamingSocketTest do
   @moduledoc false
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   doctest XtbClient.StreamingSocket
 
   alias XtbClient.MainSocket
