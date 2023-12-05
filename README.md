@@ -30,8 +30,8 @@ params = [
     app_name: "XtbClient",
     type: :demo,
     url: "wss://ws.xtb.com",
-    user: "<<USER_ID>>",
-    password: "<<PASSWORD>>"}
+    user: username,
+    password: password}
   ]
 
 {:ok, pid} = XtbClient.Connection.start_link(params)
@@ -46,8 +46,8 @@ params = [
     app_name: "XtbClient",
     type: :demo,
     url: "wss://ws.xtb.com",
-    user: "<<USER_ID>>",
-    password: "<<PASSWORD>>"}
+    user: username,
+    password: password}
   ]
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
@@ -100,8 +100,8 @@ params = [
     app_name: "XtbClient",
     type: :demo,
     url: "wss://ws.xtb.com",
-    user: "<<USER_ID>>",
-    password: "<<PASSWORD>>"}
+    user: username,
+    password: password}
   ]
 {:ok, cpid} = XtbClient.Connection.start_link(params)
 
