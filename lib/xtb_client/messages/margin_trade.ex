@@ -1,10 +1,10 @@
 defmodule XtbClient.Messages.MarginTrade do
   @moduledoc """
   Info about calculated margin in account currency.
-  
+
   ## Properties
   - `margin` value of margin.
-  
+
   ## Handled Api methods
   - `getMarginTrade`
   """
@@ -14,7 +14,6 @@ defmodule XtbClient.Messages.MarginTrade do
         }
 
   @enforce_keys [:margin]
-
   @derive Jason.Encoder
   defstruct margin: 0.0
 
@@ -22,13 +21,5 @@ defmodule XtbClient.Messages.MarginTrade do
     %__MODULE__{
       margin: margin
     }
-  end
-
-  def match(method, data) when method in ["getMarginTrade"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

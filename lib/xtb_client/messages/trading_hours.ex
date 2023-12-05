@@ -1,4 +1,16 @@
 defmodule XtbClient.Messages.TradingHours do
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TradingHour`s.
+
+  ## Parameters
+  - `data` array or results.
+
+  ## Handled Api methods
+  - `getTradingHours`
+  """
+
+  alias XtbClient.Messages.TradingHour
+
   defmodule Query do
     @moduledoc """
     Info about the query for trading hours.
@@ -12,7 +24,6 @@ defmodule XtbClient.Messages.TradingHours do
           }
 
     @enforce_keys [:symbols]
-
     @derive Jason.Encoder
     defstruct symbols: []
 
@@ -23,24 +34,11 @@ defmodule XtbClient.Messages.TradingHours do
     end
   end
 
-  alias XtbClient.Messages.TradingHour
-
-  @moduledoc """
-  Query result for list of `XtbClient.Messages.TradingHour`s.
-
-  ## Parameters
-  - `data` array or results.
-
-  ## Handled Api methods
-  - `getTradingHours`
-  """
-
   @type t :: %__MODULE__{
           data: [TradingHour.t()]
         }
 
   @enforce_keys [:data]
-
   @derive Jason.Encoder
   defstruct data: []
 
@@ -50,13 +48,5 @@ defmodule XtbClient.Messages.TradingHours do
         data
         |> Enum.map(&TradingHour.new(&1))
     }
-  end
-
-  def match(method, data) when method in ["getTradingHours"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

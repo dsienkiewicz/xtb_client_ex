@@ -1,6 +1,4 @@
 defmodule XtbClient.Messages.TickPrice do
-  alias XtbClient.Messages.QuoteId
-
   @moduledoc """
   Info about one tick of price.
 
@@ -19,6 +17,8 @@ defmodule XtbClient.Messages.TickPrice do
   - `symbol` symbol,
   - `timestamp` timestamp.
   """
+
+  alias XtbClient.Messages.QuoteId
 
   @type t :: %__MODULE__{
           ask: float(),
@@ -41,15 +41,17 @@ defmodule XtbClient.Messages.TickPrice do
     :ask_volume,
     :bid,
     :bid_volume,
+    :exe_mode,
     :high,
     :level,
     :low,
+    :quote_id,
     :spread_raw,
     :spread_table,
     :symbol,
     :timestamp
   ]
-
+  @derive Jason.Encoder
   defstruct ask: 0.0,
             ask_volume: nil,
             bid: 0.0,
@@ -70,7 +72,8 @@ defmodule XtbClient.Messages.TickPrice do
         } = args
       )
       when is_integer(exemode) do
-    value = __MODULE__.new(Map.delete(args, "exemode"))
+    value = args |> Map.drop(["exemode"]) |> new()
+
     %{value | exe_mode: exemode}
   end
 
@@ -80,7 +83,8 @@ defmodule XtbClient.Messages.TickPrice do
         } = args
       )
       when is_integer(quote_id) do
-    value = __MODULE__.new(Map.delete(args, "quoteId"))
+    value = args |> Map.drop(["quoteId"]) |> new()
+
     %{value | quote_id: QuoteId.parse(quote_id)}
   end
 
@@ -103,19 +107,20 @@ defmodule XtbClient.Messages.TickPrice do
              is_integer(level) and
              is_number(low) and
              is_number(spread_raw) and is_number(spread_table) and
-             is_binary(symbol) and
              is_integer(timestamp_value) do
     %__MODULE__{
       ask: ask,
       ask_volume: ask_volume,
       bid: bid,
       bid_volume: bid_volume,
+      exe_mode: nil,
       high: high,
       level: level,
       low: low,
+      quote_id: nil,
       spread_raw: spread_raw,
       spread_table: spread_table,
-      symbol: symbol,
+      symbol: symbol || "",
       timestamp: DateTime.from_unix!(timestamp_value, :millisecond)
     }
   end

@@ -1,7 +1,7 @@
 defmodule XtbClient.Messages.TradeType do
   @moduledoc """
   Atoms representing operation types.
-  
+
   ## Values
   - `:open` order open, used for opening orders,
   - `:pending` order pending, only used in the streaming `XtbClient.Connection.subscribe_get_trades/2` command,
@@ -16,7 +16,7 @@ defmodule XtbClient.Messages.TradeType do
   @doc """
   Format atom representing trade type to integer value.
   """
-  @spec format(t()) :: trade_code()
+  @spec format(type :: t()) :: trade_code()
   def format(type) when is_atom(type) do
     format_type(type)
   end

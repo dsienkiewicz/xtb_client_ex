@@ -21,7 +21,6 @@ defmodule XtbClient.Messages.NewsInfo do
         }
 
   @enforce_keys [:body, :body_length, :key, :time, :time_string, :title]
-
   @derive Jason.Encoder
   defstruct body: "",
             body_length: 0,
@@ -30,24 +29,19 @@ defmodule XtbClient.Messages.NewsInfo do
             time_string: "",
             title: ""
 
-  def new(%{
-        "body" => body,
-        "bodylen" => body_length,
-        "key" => key,
-        "time" => time_value,
-        "timeString" => time_string,
-        "title" => title
-      })
-      when is_binary(body) and is_number(body_length) and
-             is_binary(key) and is_number(time_value) and is_binary(time_string) and
-             is_binary(title) do
-    %__MODULE__{
-      body: body,
-      body_length: body_length,
-      key: key,
-      time: DateTime.from_unix!(time_value, :millisecond),
-      time_string: time_string,
-      title: title
+  def new(
+        %{
+          "bodylen" => body_length,
+          "timeString" => time_string
+        } = args
+      )
+      when is_number(body_length) do
+    value = args |> Map.drop(["bodylen", "timeString"]) |> new()
+
+    %{
+      value
+      | body_length: body_length,
+        time_string: time_string || ""
     }
   end
 
@@ -57,16 +51,14 @@ defmodule XtbClient.Messages.NewsInfo do
         "time" => time_value,
         "title" => title
       })
-      when is_binary(body) and
-             is_binary(key) and is_number(time_value) and
-             is_binary(title) do
+      when is_number(time_value) do
     %__MODULE__{
-      body: body,
+      body: body || "",
       body_length: String.length(body),
-      key: key,
+      key: key || "",
       time: DateTime.from_unix!(time_value, :millisecond),
       time_string: "",
-      title: title
+      title: title || ""
     }
   end
 end

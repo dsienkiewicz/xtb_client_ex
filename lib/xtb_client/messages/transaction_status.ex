@@ -9,7 +9,7 @@ defmodule XtbClient.Messages.TransactionStatus do
   @doc """
   Parse integer value as valid atom for transaction status.
   """
-  @spec parse(status_code()) :: t()
+  @spec parse(value :: status_code()) :: t()
   def parse(value) when value in [0, 1, 3, 4] do
     parse_status(value)
   end

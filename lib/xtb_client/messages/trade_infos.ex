@@ -1,4 +1,18 @@
 defmodule XtbClient.Messages.TradeInfos do
+  @moduledoc """
+  Query result for list of `XtbClient.Messages.TradeInfo`s.
+
+  ## Parameters
+  - `data` array or results.
+
+  ## Handled Api methods
+  - `getTradeRecords`
+  - `getTrades`
+  - `getTradesHistory`
+  """
+
+  alias XtbClient.Messages.TradeInfo
+
   defmodule Query do
     @moduledoc """
     Info about query for trade infos.
@@ -12,7 +26,6 @@ defmodule XtbClient.Messages.TradeInfos do
           }
 
     @enforce_keys [:orders]
-
     @derive Jason.Encoder
     defstruct orders: []
 
@@ -23,25 +36,12 @@ defmodule XtbClient.Messages.TradeInfos do
     end
   end
 
-  alias XtbClient.Messages.TradeInfo
-
-  @moduledoc """
-  Query result for list of `XtbClient.Messages.TradeInfo`s.
-
-  ## Parameters
-  - `data` array or results.
-
-  ## Handled Api methods
-  - `getTradeRecords`
-  - `getTrades`
-  - `getTradesHistory`
-  """
-
   @type t :: %__MODULE__{
           data: [TradeInfo.t()]
         }
 
   @enforce_keys [:data]
+  @derive Jason.Encoder
   defstruct data: []
 
   def new(data) when is_list(data) do
@@ -54,13 +54,5 @@ defmodule XtbClient.Messages.TradeInfos do
 
   def new(data) when is_map(data) do
     TradeInfo.new(data)
-  end
-
-  def match(method, data) when method in ["getTradeRecords", "getTrades", "getTradesHistory"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

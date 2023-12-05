@@ -99,9 +99,11 @@ defmodule XtbClient.ConnectionTest do
   end
 
   test "get chart last", %{pid: pid} do
+    now = DateTime.utc_now()
+
     args = %{
       period: :h1,
-      start: DateTime.utc_now() |> DateTime.add(-30 * 24 * 60 * 60),
+      start: DateTime.add(now, -30 * 24 * 60 * 60),
       symbol: "EURPLN"
     }
 
@@ -111,15 +113,38 @@ defmodule XtbClient.ConnectionTest do
     assert %RateInfos{} = result
     assert is_number(result.digits)
     assert [elem | _] = result.data
-    assert %Candle{} = elem
+
+    assert %Candle{
+             symbol: symbol,
+             open: open,
+             high: high,
+             low: low,
+             close: close,
+             vol: vol,
+             ctm: ctm,
+             ctm_string: ctm_string,
+             quote_id: quote_id
+           } = elem
+
+    assert "EURPLN" == symbol
+    assert is_number(open)
+    assert is_number(high)
+    assert is_number(low)
+    assert is_number(close)
+    assert is_number(vol)
+    assert DateTime.compare(ctm, now) == :lt
+    assert is_binary(ctm_string)
+    refute quote_id
   end
 
   test "get chart range", %{pid: pid} do
+    now = DateTime.utc_now()
+
     args = %{
       range:
         DateRange.new(%{
-          from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
-          to: DateTime.utc_now()
+          from: DateTime.add(now, -2 * 30 * 24 * 60 * 60),
+          to: now
         }),
       period: :h1,
       symbol: "EURPLN"
@@ -131,7 +156,28 @@ defmodule XtbClient.ConnectionTest do
     assert %RateInfos{} = result
     assert is_number(result.digits)
     assert [elem | _] = result.data
-    assert %Candle{} = elem
+
+    assert %Candle{
+             symbol: symbol,
+             open: open,
+             high: high,
+             low: low,
+             close: close,
+             vol: vol,
+             ctm: ctm,
+             ctm_string: ctm_string,
+             quote_id: quote_id
+           } = elem
+
+    assert "EURPLN" == symbol
+    assert is_number(open)
+    assert is_number(high)
+    assert is_number(low)
+    assert is_number(close)
+    assert is_number(vol)
+    assert DateTime.compare(ctm, now) == :lt
+    assert is_binary(ctm_string)
+    refute quote_id
   end
 
   test "get commission definition", %{pid: pid} do
@@ -264,6 +310,9 @@ defmodule XtbClient.ConnectionTest do
   end
 
   test "trade transaction - open and close transaction", %{pid: pid} do
+    # needed to wait for message to be received from server that transaction is accepted
+    Connection.subscribe_get_trade_status(pid, self())
+
     buy_args = %{
       operation: :buy,
       custom_comment: "Buy transaction",
@@ -278,17 +327,13 @@ defmodule XtbClient.ConnectionTest do
 
     assert %TradeTransaction{} = result
 
-    # needs some time for server to process order correctly
-    Process.sleep(100)
+    assert_receive {:ok, %TradeStatus{}}, @default_wait_time
 
     open_order_id = result.order
     status = TradeTransactionStatus.Query.new(open_order_id)
     result = Connection.trade_transaction_status(pid, status)
 
     assert %TradeTransactionStatus{} = result
-
-    # needs some time for server to process order correctly
-    Process.sleep(100)
 
     # get all opened only trades
     trades_query = Trades.Query.new(true)
@@ -314,6 +359,7 @@ defmodule XtbClient.ConnectionTest do
     result = Connection.trade_transaction(pid, close)
 
     assert %TradeTransaction{} = result
+    assert_receive {:ok, %TradeStatus{}}, @default_wait_time
 
     close_order_id = result.order
     status = TradeTransactionStatus.Query.new(close_order_id)
@@ -323,6 +369,8 @@ defmodule XtbClient.ConnectionTest do
   end
 
   test "subscribe to get balance", %{pid: pid} do
+    Connection.subscribe_get_balance(pid, self())
+
     buy_args = %{
       operation: :buy,
       custom_comment: "Buy transaction",
@@ -338,11 +386,7 @@ defmodule XtbClient.ConnectionTest do
     assert %TradeTransaction{} = result
     open_order_id = result.order
 
-    # needs some time for server to process order correctly
-    Process.sleep(100)
-
-    # real test scenario
-    Connection.subscribe_get_balance(pid, self())
+    assert_receive {:ok, %BalanceInfo{}}, @default_wait_time
 
     # get all opened only trades
     trades_query = Trades.Query.new(true)
@@ -366,8 +410,9 @@ defmodule XtbClient.ConnectionTest do
 
     close = TradeTransaction.Command.new(close_args)
     result = Connection.trade_transaction(pid, close)
-
     assert %TradeTransaction{} = result
+
+    assert_receive {:ok, %BalanceInfo{}}, @default_wait_time
   end
 
   @tag timeout: @default_wait_time

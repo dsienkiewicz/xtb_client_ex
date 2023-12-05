@@ -62,11 +62,13 @@ defmodule XtbClient.Connection do
   alias XtbClient.{MainSocket, StreamingSocket, StreamingMessage}
 
   alias XtbClient.Messages.{
+    Candle,
     Candles,
     ChartLast,
     ChartRange,
     DateRange,
     ProfitCalculation,
+    RateInfos,
     Quotations,
     SymbolInfo,
     SymbolVolume,
@@ -116,11 +118,10 @@ defmodule XtbClient.Connection do
   @impl true
   def init(opts) do
     {:ok, mpid} = MainSocket.start_link(opts)
+    Process.flag(:trap_exit, true)
 
     Process.sleep(500)
     MainSocket.stream_session_id(mpid, self())
-
-    Process.flag(:trap_exit, true)
 
     type = get_in(opts, [:type])
     url = get_in(opts, [:url])
@@ -509,7 +510,7 @@ defmodule XtbClient.Connection do
     ref_string = inspect(ref)
     MainSocket.query(mpid, self(), ref_string, method)
 
-    clients = Map.put(clients, ref_string, from)
+    clients = Map.put(clients, ref_string, {from, method, nil})
     state = %State{state | clients: clients}
 
     {:noreply, state}
@@ -524,17 +525,32 @@ defmodule XtbClient.Connection do
     ref_string = inspect(ref)
     MainSocket.query(mpid, self(), ref_string, method, params)
 
-    clients = Map.put(clients, ref_string, from)
+    clients = Map.put(clients, ref_string, {from, method, params})
     state = %State{state | clients: clients}
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:response, ref, resp} = _message, %State{clients: clients} = state) do
-    {client, clients} = Map.pop!(clients, ref)
-    GenServer.reply(client, resp)
-    state = %State{state | clients: clients}
+  def handle_cast(
+        {:response, ref, %RateInfos{data: data} = resp} = _message,
+        %State{clients: clients} = state
+      ) do
+    {_client, _method, %{info: %{symbol: symbol}}} = Map.get(clients, ref)
+
+    resp = %RateInfos{
+      resp
+      | data: Enum.map(data, &%Candle{&1 | symbol: symbol})
+    }
+
+    state = handle_query_response(ref, resp, state)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:response, ref, resp} = _message, %State{} = state) do
+    state = handle_query_response(ref, resp, state)
 
     {:noreply, state}
   end
@@ -579,6 +595,13 @@ defmodule XtbClient.Connection do
     send(subscriber, {:ok, result})
 
     {:noreply, state}
+  end
+
+  defp handle_query_response(ref, response, %State{clients: clients} = state) do
+    {{client, _method, _params}, clients} = Map.pop!(clients, ref)
+    GenServer.reply(client, response)
+
+    %State{state | clients: clients}
   end
 
   @impl true

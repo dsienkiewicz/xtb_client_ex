@@ -9,7 +9,6 @@ defmodule XtbClient.Messages.DateRange do
         }
 
   @enforce_keys [:start, :end]
-
   @derive Jason.Encoder
   defstruct start: nil,
             end: nil

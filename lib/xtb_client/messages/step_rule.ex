@@ -17,7 +17,6 @@ defmodule XtbClient.Messages.StepRule do
         }
 
   @enforce_keys [:id, :name, :steps]
-
   @derive Jason.Encoder
   defstruct id: 0,
             name: "",
@@ -28,10 +27,10 @@ defmodule XtbClient.Messages.StepRule do
         "name" => name,
         "steps" => steps
       })
-      when is_number(id) and is_binary(name) and is_list(steps) do
+      when is_number(id) and is_list(steps) do
     %__MODULE__{
       id: id,
-      name: name,
+      name: name || "",
       steps: Enum.map(steps, &Step.new(&1))
     }
   end

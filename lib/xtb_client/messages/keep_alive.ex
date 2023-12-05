@@ -1,10 +1,10 @@
 defmodule XtbClient.Messages.KeepAlive do
   @moduledoc """
   Info representing response from the server sent to keep alive command.
-  
+
   ## Parameters
   - `timestamp` current timestamp.
-  
+
   ## Handled Api methods
   - `getKeepAlive`
   """
@@ -14,7 +14,6 @@ defmodule XtbClient.Messages.KeepAlive do
         }
 
   @enforce_keys [:timestamp]
-
   @derive Jason.Encoder
   defstruct timestamp: nil
 
@@ -22,13 +21,5 @@ defmodule XtbClient.Messages.KeepAlive do
     %__MODULE__{
       timestamp: DateTime.from_unix!(timestamp_value, :millisecond)
     }
-  end
-
-  def match(method, data) when method in ["getKeepAlive"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

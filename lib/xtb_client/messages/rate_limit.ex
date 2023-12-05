@@ -9,6 +9,7 @@ defmodule XtbClient.RateLimit do
         }
 
   @enforce_keys [:limit_interval, :time_stamp]
+  @derive Jason.Encoder
   defstruct limit_interval: 200,
             time_stamp: 0
 

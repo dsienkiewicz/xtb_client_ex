@@ -1,7 +1,5 @@
 defmodule XtbClient.Messages.ChartRange do
   defmodule Query do
-    alias XtbClient.Messages.{DateRange, Period}
-
     @moduledoc """
     Parameters for chart range query.
 
@@ -20,6 +18,8 @@ defmodule XtbClient.Messages.ChartRange do
     It is possible for API to return fewer chart candles than set in tick field.
     """
 
+    alias XtbClient.Messages.{DateRange, Period}
+
     @type t :: %__MODULE__{
             start: integer(),
             end: integer(),
@@ -28,8 +28,7 @@ defmodule XtbClient.Messages.ChartRange do
             ticks: integer()
           }
 
-    @enforce_keys [:start, :end, :period, :symbol]
-
+    @enforce_keys [:start, :end, :period, :symbol, :ticks]
     @derive Jason.Encoder
     defstruct start: nil,
               end: nil,
@@ -39,7 +38,8 @@ defmodule XtbClient.Messages.ChartRange do
 
     def new(%{ticks: ticks} = args)
         when is_number(ticks) do
-      value = __MODULE__.new(Map.delete(args, :ticks))
+      value = args |> Map.drop([:ticks]) |> new()
+
       %{value | ticks: ticks}
     end
 
@@ -53,7 +53,8 @@ defmodule XtbClient.Messages.ChartRange do
         start: start,
         end: end_value,
         period: Period.format(period),
-        symbol: symbol
+        symbol: symbol,
+        ticks: 0
       }
     end
   end

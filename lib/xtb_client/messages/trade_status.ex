@@ -1,6 +1,4 @@
 defmodule XtbClient.Messages.TradeStatus do
-  alias XtbClient.Messages.TransactionStatus
-
   @moduledoc """
   Info about the actual status of sent trade request.
 
@@ -15,6 +13,8 @@ defmodule XtbClient.Messages.TradeStatus do
   - `getTradeStatus`
   """
 
+  alias XtbClient.Messages.TransactionStatus
+
   @type t :: %__MODULE__{
           custom_comment: String.t(),
           message: String.t(),
@@ -23,6 +23,8 @@ defmodule XtbClient.Messages.TradeStatus do
           status: TransactionStatus.t()
         }
 
+  @enforce_keys [:custom_comment, :message, :order, :price, :status]
+  @derive Jason.Encoder
   defstruct custom_comment: "",
             message: nil,
             order: 0,
@@ -36,23 +38,14 @@ defmodule XtbClient.Messages.TradeStatus do
         "price" => price,
         "requestStatus" => status
       })
-      when is_binary(comment) and
-             is_integer(order) and is_number(price) and
+      when is_integer(order) and is_number(price) and
              is_integer(status) do
     %__MODULE__{
-      custom_comment: comment,
+      custom_comment: comment || "",
       message: message,
       order: order,
       price: price,
       status: TransactionStatus.parse(status)
     }
-  end
-
-  def match(method, data) when method in ["getTradeStatus"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end

@@ -25,8 +25,15 @@ defmodule XtbClient.Messages.UserInfo do
           trailing_stop: boolean()
         }
 
-  @enforce_keys [:company_unit, :currency, :group, :ib_account, :leverage_mult, :trailing_stop]
-
+  @enforce_keys [
+    :company_unit,
+    :currency,
+    :group,
+    :ib_account,
+    :leverage_mult,
+    :spread_type,
+    :trailing_stop
+  ]
   @derive Jason.Encoder
   defstruct company_unit: 0,
             currency: "",
@@ -36,9 +43,10 @@ defmodule XtbClient.Messages.UserInfo do
             spread_type: nil,
             trailing_stop: false
 
-  def new(%{"spreadType" => spread_type} = args) when is_binary(spread_type) do
-    value = __MODULE__.new(Map.delete(args, "spreadType"))
-    %{value | spread_type: spread_type}
+  def new(%{"spreadType" => spread_type} = args) do
+    value = args |> Map.drop(["spreadType"]) |> new()
+
+    %{value | spread_type: spread_type || ""}
   end
 
   def new(%{
@@ -49,24 +57,17 @@ defmodule XtbClient.Messages.UserInfo do
         "leverageMultiplier" => leverage_mult,
         "trailingStop" => trailing_stop
       })
-      when is_number(company_unit) and is_binary(currency) and
-             is_binary(group) and is_boolean(ib_account) and
-             is_number(leverage_mult) and is_boolean(trailing_stop) do
+      when is_number(company_unit) and
+             is_boolean(ib_account) and
+             is_number(leverage_mult) do
     %__MODULE__{
       company_unit: company_unit,
-      currency: currency,
-      group: group,
+      currency: currency || "",
+      group: group || "",
       ib_account: ib_account,
+      spread_type: nil,
       leverage_mult: leverage_mult / 100,
-      trailing_stop: trailing_stop
+      trailing_stop: trailing_stop || ""
     }
-  end
-
-  def match(method, data) when method in ["getCurrentUserData"] do
-    {:ok, __MODULE__.new(data)}
-  end
-
-  def match(_method, _data) do
-    {:no_match}
   end
 end
