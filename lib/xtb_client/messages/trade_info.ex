@@ -34,6 +34,9 @@ defmodule XtbClient.Messages.TradeInfo do
   """
 
   alias XtbClient.Messages.Operation
+  alias XtbClient.Messages.TradeType
+
+  @type state :: :modified | :deleted
 
   @type t :: %__MODULE__{
           close_price: float(),
@@ -56,13 +59,13 @@ defmodule XtbClient.Messages.TradeInfo do
           profit: float(),
           stop_loss: float(),
           spread: float() | nil,
-          state: integer() | nil,
+          state: state(),
           storage: float(),
           symbol: String.t() | nil,
           taxes: float() | nil,
           timestamp: DateTime.t() | nil,
           take_profit: float(),
-          type: integer() | nil,
+          type: TradeType.t(),
           volume: float()
         }
 
@@ -128,6 +131,9 @@ defmodule XtbClient.Messages.TradeInfo do
         } = args
       ) do
     value = args |> Map.drop(["state", "type"]) |> new()
+
+    state = state(state)
+    type = TradeType.parse(type)
 
     %{value | state: state, type: type}
   end
@@ -220,4 +226,7 @@ defmodule XtbClient.Messages.TradeInfo do
       volume: volume
     }
   end
+
+  def state("Modified"), do: :modified
+  def state("Deleted"), do: :deleted
 end
