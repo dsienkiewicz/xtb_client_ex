@@ -319,7 +319,7 @@ defmodule XtbClient.ConnectionTest do
       price: 1200.0,
       symbol: "LITECOIN",
       type: :open,
-      volume: 0.5
+      volume: 1.0
     }
 
     buy = TradeTransaction.Command.new(buy_args)
@@ -352,7 +352,7 @@ defmodule XtbClient.ConnectionTest do
       symbol: "LITECOIN",
       order: position_to_close.order_opened,
       type: :close,
-      volume: 0.5
+      volume: 1.0
     }
 
     close = TradeTransaction.Command.new(close_args)
@@ -377,7 +377,7 @@ defmodule XtbClient.ConnectionTest do
       price: 1200.0,
       symbol: "LITECOIN",
       type: :open,
-      volume: 0.5
+      volume: 1.0
     }
 
     buy = TradeTransaction.Command.new(buy_args)
@@ -405,7 +405,7 @@ defmodule XtbClient.ConnectionTest do
       symbol: "LITECOIN",
       order: position_to_close.order_opened,
       type: :close,
-      volume: 0.5
+      volume: 1.0
     }
 
     close = TradeTransaction.Command.new(close_args)
@@ -446,7 +446,7 @@ defmodule XtbClient.ConnectionTest do
       price: 1200.0,
       symbol: "LITECOIN",
       type: :open,
-      volume: 0.5
+      volume: 1.0
     }
 
     order_id = open_trade(pid, buy_args)
@@ -458,7 +458,7 @@ defmodule XtbClient.ConnectionTest do
       custom_comment: "Close transaction",
       symbol: "LITECOIN",
       type: :close,
-      volume: 0.5
+      volume: 1.0
     }
 
     close_trade(pid, order_id, close_args)
@@ -483,7 +483,7 @@ defmodule XtbClient.ConnectionTest do
       price: 1200.0,
       symbol: "LITECOIN",
       type: :open,
-      volume: 0.5
+      volume: 1.0
     }
 
     order_id = open_trade(pid, buy_args)
@@ -495,7 +495,7 @@ defmodule XtbClient.ConnectionTest do
       custom_comment: "Close transaction",
       symbol: "LITECOIN",
       type: :close,
-      volume: 0.5
+      volume: 1.0
     }
 
     close_trade(pid, order_id, close_args)
@@ -512,7 +512,7 @@ defmodule XtbClient.ConnectionTest do
       price: 1200.0,
       symbol: "LITECOIN",
       type: :open,
-      volume: 0.5
+      volume: 1.0
     }
 
     order_id = open_trade(pid, buy_args)
@@ -524,7 +524,7 @@ defmodule XtbClient.ConnectionTest do
       custom_comment: "Close transaction",
       symbol: "LITECOIN",
       type: :close,
-      volume: 0.5
+      volume: 1.0
     }
 
     close_trade(pid, order_id, close_args)
