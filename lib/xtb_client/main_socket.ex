@@ -2,7 +2,7 @@ defmodule XtbClient.MainSocket do
   @moduledoc """
   WebSocket server used for synchronous communication.
 
-  `MainSocket` is being used like standard `GenServer` - could be started with `start_link/1` and supervised.
+  `MainSocket` is being used like standard `GenServer` - could be started with `start_link/2` and supervised.
 
   After successful connection to WebSocket the flow is:
   - process casts `login` command to obtain session with backend server,
@@ -208,7 +208,7 @@ defmodule XtbClient.MainSocket do
   * request charts of 5 minutes period, for 3 months time span, back from now;
   * response: you are guaranteed to get 1 month of 5 minutes charts; because, 5 minutes period charts are not accessible 2 months and 3 months back from now
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_candles/3` which is the preferred way of retrieving current candle data.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_candles/2` which is the preferred way of retrieving current candle data.**
   """
   @spec get_chart_last(
           GenServer.server(),
@@ -244,7 +244,7 @@ defmodule XtbClient.MainSocket do
   Note, that specific PERIOD_ is the lowest (i.e. the most detailed) period, accessible in listed range. For instance, in months range <1-7) you can access periods: PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1.
   Specific data ranges availability is guaranteed, however those ranges may be wider, e.g.: PERIOD_M1 may be accessible for 1.5 months back from now, where 1.0 months is guaranteed.
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_candles/3` which is the preferred way of retrieving current candle data.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_candles/2` which is the preferred way of retrieving current candle data.**
   """
   @spec get_chart_range(GenServer.server(), Messages.ChartRange.Query.t()) ::
           {:ok, Messages.RateInfos.t()} | {:error, :timeout} | {:error, Error.t()}
@@ -297,7 +297,7 @@ defmodule XtbClient.MainSocket do
   @doc """
   Returns various account indicators.
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_balance/2` which is the preferred way of retrieving current account indicators.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_balance/1` which is the preferred way of retrieving current account indicators.**
   """
   @spec get_margin_level(GenServer.server()) ::
           {:ok, Messages.BalanceInfo.t()} | {:error, :timeout} | {:error, Error.t()}
@@ -319,7 +319,7 @@ defmodule XtbClient.MainSocket do
   @doc """
   Returns news from trading server which were sent within specified period of time.
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_news/2` which is the preferred way of retrieving news data.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_news/1` which is the preferred way of retrieving news data.**
   """
   @spec get_news(GenServer.server(), Messages.DateRange.t()) ::
           {:ok, Messages.NewsInfos.t()} | {:error, :timeout} | {:error, Error.t()}
@@ -371,7 +371,7 @@ defmodule XtbClient.MainSocket do
 
   New timestamp obtained from output will be used as an argument of the next call of this command.
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_tick_prices/3` which is the preferred way of retrieving ticks data.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_tick_prices/2` which is the preferred way of retrieving ticks data.**
   """
   @spec get_tick_prices(GenServer.server(), Messages.TickPrices.Query.t()) ::
           {:ok, Messages.TickPrices.t()} | {:error, :timeout} | {:error, Error.t()}
@@ -391,7 +391,7 @@ defmodule XtbClient.MainSocket do
   @doc """
   Returns array of user's trades.
 
-  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_trades/2` which is the preferred way of retrieving trades data.**
+  **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_trades/1` which is the preferred way of retrieving trades data.**
   """
   @spec get_trades(GenServer.server(), Messages.Trades.Query.t()) ::
           {:ok, Messages.TradeInfos.t()} | {:error, :timeout} | {:error, Error.t()}

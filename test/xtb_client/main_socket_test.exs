@@ -287,7 +287,7 @@ defmodule XtbClient.MainSocketTest do
     test "get tick prices", %{pid: pid} do
       args = %{
         level: 0,
-        symbols: ["EURPLN"],
+        symbols: ["LITECOIN"],
         timestamp: DateTime.utc_now() |> DateTime.add(-2 * 60)
       }
 

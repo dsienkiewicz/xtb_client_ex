@@ -9,6 +9,10 @@ defmodule XtbClient.StreamingSocket do
   - process waits for subscription requests from other processes
   - when subscription request is received, process sends subscription command to WebSocket
   - when response from WebSocket is received, process sends result to caller process via `handle_message/2` callback
+
+  The lifecycle of `StreamingSocket` is tightly coupled to `MainSocket` process
+  - when `MainSocket` dies, `StreamingSocket` also dies, as `streaming_session_id` is not longer usable.
+  Thus, `StreamingSocket` should be supervised in pair with `MainSocket` process.
   """
   use WebSockex
 
@@ -83,6 +87,9 @@ defmodule XtbClient.StreamingSocket do
 
   @doc """
   Callback invoked when error is received from WebSocket.
+
+  ## Params:
+  - `error` - struct with error data
   """
   @callback handle_error(error :: Error.t()) :: :ok
 
@@ -187,7 +194,7 @@ defmodule XtbClient.StreamingSocket do
   A new 'keep alive' message is sent by the API every 3 seconds.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.KeepAlive` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_keep_alive(GenServer.server()) ::
           {:ok, StreamingMessage.token()} | {:error, term()}
@@ -205,7 +212,7 @@ defmodule XtbClient.StreamingSocket do
   Subscribes for news.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.NewsInfos` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_get_news(GenServer.server()) ::
           {:ok, StreamingMessage.token()} | {:error, term()}
@@ -223,7 +230,7 @@ defmodule XtbClient.StreamingSocket do
   Subscribes for profits.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.ProfitInfo` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_get_profits(GenServer.server()) ::
           {:ok, StreamingMessage.token()} | {:error, term()}
@@ -239,11 +246,11 @@ defmodule XtbClient.StreamingSocket do
 
   @doc """
   Establishes subscription for quotations and allows to obtain the relevant information in real-time, as soon as it is available in the system.
-  The `subscribe_get_tick_prices/3` command can be invoked many times for the same symbol, but only one subscription for a given symbol will be created.
+  The `subscribe_get_tick_prices/2` command can be invoked many times for the same symbol, but only one subscription for a given symbol will be created.
   Please beware that when multiple records are available, the order in which they are received is not guaranteed.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.TickPrice` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_get_tick_prices(
           GenServer.server(),
@@ -265,7 +272,7 @@ defmodule XtbClient.StreamingSocket do
   Please beware that when multiple records are available, the order in which they are received is not guaranteed.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.TradeInfos` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_get_trades(GenServer.server()) ::
           {:ok, StreamingMessage.token()} | {:error, term()}
@@ -284,7 +291,7 @@ defmodule XtbClient.StreamingSocket do
   Please beware that when multiple records are available, the order in which they are received is not guaranteed.
 
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  When the new data are available, the `XtbClient.Messages.TradeStatus` struct is sent via `handle_message/2` callback.
   """
   @spec subscribe_get_trade_status(GenServer.server()) ::
           {:ok, StreamingMessage.token()} | {:error, term()}
