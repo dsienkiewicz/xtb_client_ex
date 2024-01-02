@@ -21,13 +21,23 @@ defmodule XtbClient.MainSocket do
   @default_query_timeout 10_000
 
   defmodule Config do
-    @type t :: %{
-            :url => String.t() | URI.t(),
-            :type => AccountType.t(),
-            :user => String.t(),
-            :password => String.t(),
-            :app_name => String.t()
-          }
+    @type t :: [
+            url: String.t() | URI.t(),
+            type: AccountType.t(),
+            user: String.t(),
+            password: String.t(),
+            app_name: String.t()
+          ]
+
+    def keys do
+      [
+        :url,
+        :type,
+        :user,
+        :password,
+        :app_name
+      ]
+    end
 
     def parse(opts) do
       type = AccountType.format_main(get_in(opts, [:type]))
@@ -84,9 +94,11 @@ defmodule XtbClient.MainSocket do
   Starts a `XtbClient.MainSocket` process linked to the calling process.
   """
   @spec start_link(Config.t(), keyword()) :: GenServer.on_start()
-  def start_link(args, opts \\ []) do
+  def start_link(args, _opts \\ []) do
+    {conn_opts, opts} = Keyword.split(args, Config.keys())
+
     %{type: type, url: url, user: user, password: password, app_name: app_name} =
-      Config.parse(args)
+      Config.parse(conn_opts)
 
     state = %State{
       url: url,

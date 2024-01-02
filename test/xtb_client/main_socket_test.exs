@@ -57,13 +57,13 @@ defmodule XtbClient.MainSocketTest do
     user = Dotenvy.env!("XTB_API_USERNAME", :string!)
     passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
 
-    params = %{
+    params = [
       url: url,
       type: :demo,
       user: user,
       password: passwd,
       app_name: "XtbClient"
-    }
+    ]
 
     {:ok, %{params: params}}
   end
@@ -95,6 +95,13 @@ defmodule XtbClient.MainSocketTest do
 
       assert [{:undefined, _, :worker, [MainSocket]}] =
                DynamicSupervisor.which_children(XtbClient.MainDynamicSupervisor)
+    end
+
+    test "handles additional params to start_link/2", %{params: params} do
+      params = Keyword.merge(params, name: MainSocketTest)
+      {:ok, pid} = MainSocket.start_link(params)
+
+      assert Process.whereis(MainSocketTest) == pid
     end
   end
 
@@ -336,7 +343,7 @@ defmodule XtbClient.MainSocketTest do
       {:ok, stream_session_id} = poll_stream_session_id(pid)
 
       params =
-        Map.merge(params, %{stream_session_id: stream_session_id, module: StreamingSocketMock})
+        Keyword.merge(params, stream_session_id: stream_session_id, module: StreamingSocketMock)
 
       {:ok, streaming_pid} = StreamingSocket.start_link(params)
       assert {:ok, _} = StreamingSocket.subscribe_get_trade_status(streaming_pid)

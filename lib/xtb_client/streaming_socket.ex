@@ -24,12 +24,21 @@ defmodule XtbClient.StreamingSocket do
   defmodule Config do
     @moduledoc false
 
-    @type t :: %{
-            :url => String.t() | URI.t(),
-            :type => AccountType.t(),
-            :stream_session_id => String.t(),
-            :module => module()
-          }
+    @type t :: [
+            url: String.t() | URI.t(),
+            type: AccountType.t(),
+            stream_session_id: String.t(),
+            module: module()
+          ]
+
+    def keys do
+      [
+        :url,
+        :type,
+        :stream_session_id,
+        :module
+      ]
+    end
 
     def parse(opts) do
       type = AccountType.format_streaming(get_in(opts, [:type]))
@@ -101,8 +110,10 @@ defmodule XtbClient.StreamingSocket do
   """
   @spec start_link(Config.t(), keyword()) :: GenServer.on_start()
   def start_link(args, _opts \\ []) do
+    {conn_opts, opts} = Keyword.split(args, Config.keys())
+
     %{url: url, stream_session_id: stream_session_id, module: module} =
-      Config.parse(args)
+      Config.parse(conn_opts)
 
     state =
       %State{
@@ -113,7 +124,7 @@ defmodule XtbClient.StreamingSocket do
         rate_limit: RateLimit.new(200)
       }
 
-    WebSockex.start_link(url, __MODULE__, state)
+    WebSockex.start_link(url, __MODULE__, state, opts)
   end
 
   @impl WebSockex

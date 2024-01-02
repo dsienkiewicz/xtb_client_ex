@@ -25,25 +25,25 @@ defmodule XtbClient.StreamingSocketTest do
     passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
     type = :demo
 
-    params = %{
+    params = [
       url: url,
       type: :demo,
       user: user,
       password: passwd,
       app_name: "XtbClient"
-    }
+    ]
 
     {:ok, pid} = start_supervised({MainSocket, params})
     {:ok, stream_session_id} = poll_stream_session_id(pid)
 
     {:ok,
      %{
-       params: %{
+       params: [
          url: url,
          type: type,
          stream_session_id: stream_session_id,
          module: StreamingSocketMock
-       },
+       ],
        main: pid
      }}
   end
@@ -78,6 +78,13 @@ defmodule XtbClient.StreamingSocketTest do
 
       assert [{:undefined, _, :worker, [StreamingSocket]}] =
                DynamicSupervisor.which_children(XtbClient.StreamingDynamicSupervisor)
+    end
+
+    test "handles additional params to start_link/2", %{params: params} do
+      params = Keyword.merge(params, name: StreamingSocketTest)
+      {:ok, pid} = StreamingSocket.start_link(params)
+
+      assert Process.whereis(StreamingSocketTest) == pid
     end
   end
 
