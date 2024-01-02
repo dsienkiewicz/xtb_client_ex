@@ -65,12 +65,42 @@ defmodule XtbClient.MainSocketTest do
       app_name: "XtbClient"
     }
 
-    {:ok, pid} = start_supervised({MainSocket, params})
+    {:ok, %{params: params}}
+  end
 
-    {:ok, %{params: params, pid: pid}}
+  describe "session management" do
+    @tag timeout: 40 * 1000
+    test "sends ping after login", %{params: params} do
+      {:ok, pid} = MainSocket.start_link(params)
+
+      Process.sleep(30 * 1000 + 1)
+
+      assert Process.alive?(pid) == true
+    end
+
+    test "can be managed by dynamic supervisor", %{params: params} do
+      {:ok, _} =
+        DynamicSupervisor.start_link(
+          strategy: :one_for_one,
+          name: XtbClient.MainDynamicSupervisor
+        )
+
+      {:ok, pid} =
+        DynamicSupervisor.start_child(XtbClient.MainDynamicSupervisor, {MainSocket, params})
+
+      assert Process.alive?(pid) == true
+      assert Process.exit(pid, :kill) == true
+
+      Process.sleep(100)
+
+      assert [{:undefined, _, :worker, [MainSocket]}] =
+               DynamicSupervisor.which_children(XtbClient.MainDynamicSupervisor)
+    end
   end
 
   describe "public API" do
+    setup :setup_main_socket
+
     test "stream_session_id is present", %{pid: pid} do
       # needed to wait for socket to connect
       # during that time stream_session_id should be available
@@ -295,6 +325,8 @@ defmodule XtbClient.MainSocketTest do
   @default_wait_time 60 * 1000
 
   describe "trade transaction with async messages" do
+    setup :setup_main_socket
+
     setup %{pid: pid, params: params} do
       {:ok, _store} = start_supervised(StreamingTestStoreMock)
 
@@ -360,5 +392,11 @@ defmodule XtbClient.MainSocketTest do
       assert {:ok, %TradeTransactionStatus{status: :accepted}} =
                MainSocket.trade_transaction_status(pid, status)
     end
+  end
+
+  defp setup_main_socket(%{params: params} = _context) do
+    {:ok, pid} = start_supervised({MainSocket, params})
+
+    {:ok, %{pid: pid}}
   end
 end

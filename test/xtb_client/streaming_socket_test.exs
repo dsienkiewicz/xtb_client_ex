@@ -57,6 +57,28 @@ defmodule XtbClient.StreamingSocketTest do
 
       assert Process.alive?(pid) == true
     end
+
+    test "can be managed by dynamic supervisor", %{params: params} do
+      {:ok, _} =
+        DynamicSupervisor.start_link(
+          strategy: :one_for_one,
+          name: XtbClient.StreamingDynamicSupervisor
+        )
+
+      {:ok, pid} =
+        DynamicSupervisor.start_child(
+          XtbClient.StreamingDynamicSupervisor,
+          {StreamingSocket, params}
+        )
+
+      assert Process.alive?(pid) == true
+      assert Process.exit(pid, :kill) == true
+
+      Process.sleep(100)
+
+      assert [{:undefined, _, :worker, [StreamingSocket]}] =
+               DynamicSupervisor.which_children(XtbClient.StreamingDynamicSupervisor)
+    end
   end
 
   describe "public API" do

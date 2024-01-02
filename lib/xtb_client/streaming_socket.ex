@@ -99,7 +99,7 @@ defmodule XtbClient.StreamingSocket do
   @doc """
   Starts a `XtbClient.StreamingSocket` process linked to the calling process.
   """
-  @spec start_link(Config.t()) :: GenServer.on_start()
+  @spec start_link(Config.t(), keyword()) :: GenServer.on_start()
   def start_link(args, _opts \\ []) do
     %{url: url, stream_session_id: stream_session_id, module: module} =
       Config.parse(args)
