@@ -337,6 +337,9 @@ defmodule XtbClient.StreamingSocket do
          :ok <- module.handle_message(token, message) do
       {:ok, state}
     else
+      {:ok, _} = result ->
+        result
+
       {:error, error} ->
         module.handle_error(error)
         {:ok, state}
