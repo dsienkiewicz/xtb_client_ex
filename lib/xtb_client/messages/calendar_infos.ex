@@ -21,9 +21,7 @@ defmodule XtbClient.Messages.CalendarInfos do
 
   def new(data) when is_list(data) do
     %__MODULE__{
-      data:
-        data
-        |> Enum.map(&CalendarInfo.new(&1))
+      data: Enum.map(data, &CalendarInfo.new(&1))
     }
   end
 end

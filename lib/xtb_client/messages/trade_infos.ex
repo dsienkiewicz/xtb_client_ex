@@ -46,9 +46,7 @@ defmodule XtbClient.Messages.TradeInfos do
 
   def new(data) when is_list(data) do
     %__MODULE__{
-      data:
-        data
-        |> Enum.map(&TradeInfo.new(&1))
+      data: Enum.map(data, &TradeInfo.new(&1))
     }
   end
 

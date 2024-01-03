@@ -4,47 +4,48 @@ defmodule XtbClient.MainSocketTest do
   doctest XtbClient.MainSocket
 
   alias XtbClient.MainSocket
-  alias XtbClient.StreamingSocket
-  alias XtbClient.StreamingSocketMock
-  alias XtbClient.StreamingTestStoreMock
-
-  import XtbClient.MainSocket.E2EFixtures
 
   alias XtbClient.Messages.{
     BalanceInfo,
-    CalendarInfos,
     CalendarInfo,
+    CalendarInfos,
     Candle,
     ChartLast,
     ChartRange,
     CommissionDefinition,
     DateRange,
     MarginTrade,
-    NewsInfos,
     NewsInfo,
+    NewsInfos,
     ProfitCalculation,
     Quote,
     RateInfos,
     ServerTime,
-    StepRules,
-    StepRule,
     Step,
+    StepRule,
+    StepRules,
     SymbolInfo,
     SymbolInfos,
     SymbolVolume,
-    TickPrices,
     TickPrice,
-    TradeInfos,
+    TickPrices,
     TradeInfo,
+    TradeInfos,
     Trades,
     TradeStatus,
     TradeTransaction,
     TradeTransactionStatus,
-    TradingHours,
     TradingHour,
+    TradingHours,
     UserInfo,
     Version
   }
+
+  alias XtbClient.StreamingSocket
+  alias XtbClient.StreamingSocketMock
+  alias XtbClient.StreamingTestStoreMock
+
+  import XtbClient.MainSocket.E2EFixtures
 
   setup do
     Dotenvy.source([
@@ -242,7 +243,7 @@ defmodule XtbClient.MainSocketTest do
 
     test "get news", %{pid: pid} do
       args = %{
-        from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
+        from: DateTime.add(DateTime.utc_now(), -2 * 30 * 24 * 60 * 60),
         to: DateTime.utc_now()
       }
 
@@ -288,7 +289,7 @@ defmodule XtbClient.MainSocketTest do
       args = %{
         level: 0,
         symbols: ["LITECOIN"],
-        timestamp: DateTime.utc_now() |> DateTime.add(-2 * 60)
+        timestamp: DateTime.add(DateTime.utc_now(), -2 * 60)
       }
 
       query = TickPrices.Query.new(args)
@@ -300,7 +301,7 @@ defmodule XtbClient.MainSocketTest do
 
     test "get trades history", %{pid: pid} do
       args = %{
-        from: DateTime.utc_now() |> DateTime.add(-3 * 31 * 24 * 60 * 60),
+        from: DateTime.add(DateTime.utc_now(), -3 * 31 * 24 * 60 * 60),
         to: DateTime.utc_now()
       }
 
@@ -376,8 +377,10 @@ defmodule XtbClient.MainSocketTest do
       assert {:ok, %TradeInfos{data: data}} = MainSocket.get_trades(pid, trades_query)
 
       position_to_close =
-        data
-        |> Enum.find(&(&1.order_closed == open_order_id))
+        Enum.find(
+          data,
+          &(&1.order_closed == open_order_id)
+        )
 
       close_args = %{
         operation: :buy,

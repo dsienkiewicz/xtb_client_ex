@@ -3,8 +3,8 @@ defmodule XtbClient.StreamingSocketTest do
   use ExUnit.Case
   doctest XtbClient.StreamingSocket
 
-  alias XtbClient.Messages
   alias XtbClient.MainSocket
+  alias XtbClient.Messages
   alias XtbClient.StreamingSocket
   alias XtbClient.StreamingSocketMock
   alias XtbClient.StreamingTestStoreMock

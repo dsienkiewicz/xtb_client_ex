@@ -15,8 +15,11 @@ defmodule XtbClient.RateLimitTest do
 
   test "checks rate" do
     sut =
-      RateLimit.new(200)
-      |> Map.put(:time_stamp, DateTime.to_unix(DateTime.utc_now(), :millisecond))
+      Map.put(
+        RateLimit.new(200),
+        :time_stamp,
+        DateTime.to_unix(DateTime.utc_now(), :millisecond)
+      )
 
     Process.sleep(250)
 
@@ -30,8 +33,11 @@ defmodule XtbClient.RateLimitTest do
 
   test "checks rate and sleeps" do
     sut =
-      RateLimit.new(200)
-      |> Map.put(:time_stamp, DateTime.to_unix(DateTime.utc_now(), :millisecond))
+      Map.put(
+        RateLimit.new(200),
+        :time_stamp,
+        DateTime.to_unix(DateTime.utc_now(), :millisecond)
+      )
 
     current_stamp = DateTime.to_unix(DateTime.utc_now(), :millisecond)
     sut = RateLimit.check_rate(sut)

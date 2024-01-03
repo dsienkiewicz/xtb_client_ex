@@ -57,10 +57,13 @@ defmodule XtbClient.Messages.TradeTransaction do
               volume: 0.0
 
     def new(%{} = params) do
-      params
-      |> Enum.reduce(%__MODULE__{}, fn {key, value}, acc ->
-        apply(__MODULE__, key, [acc, value])
-      end)
+      Enum.reduce(
+        params,
+        %__MODULE__{},
+        fn {key, value}, acc ->
+          apply(__MODULE__, key, [acc, value])
+        end
+      )
     end
 
     def operation(%__MODULE__{} = params, operation) when is_atom(operation) do
