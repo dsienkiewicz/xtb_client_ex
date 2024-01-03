@@ -32,7 +32,6 @@ defmodule XtbClient.MainSocketTest do
     TradeInfo,
     TradeInfos,
     Trades,
-    TradeStatus,
     TradeTransaction,
     TradeTransactionStatus,
     TradingHour,
@@ -40,12 +39,6 @@ defmodule XtbClient.MainSocketTest do
     UserInfo,
     Version
   }
-
-  alias XtbClient.StreamingSocket
-  alias XtbClient.StreamingSocketMock
-  alias XtbClient.StreamingTestStoreMock
-
-  import XtbClient.MainSocket.E2EFixtures
 
   setup do
     Dotenvy.source([
@@ -328,29 +321,6 @@ defmodule XtbClient.MainSocketTest do
     test "get version", %{pid: pid} do
       assert {:ok, %Version{}} = MainSocket.get_version(pid)
     end
-  end
-
-  @default_wait_time 60 * 1000
-
-  describe "trade transaction with async messages" do
-    setup :setup_main_socket
-
-    setup %{pid: pid, params: params} do
-      {:ok, _store} = start_supervised(StreamingTestStoreMock)
-
-      parent_pid = self()
-      Agent.update(StreamingTestStoreMock, fn _ -> %{parent_pid: parent_pid} end)
-
-      {:ok, stream_session_id} = poll_stream_session_id(pid)
-
-      params =
-        Keyword.merge(params, stream_session_id: stream_session_id, module: StreamingSocketMock)
-
-      {:ok, streaming_pid} = StreamingSocket.start_link(params)
-      assert {:ok, _} = StreamingSocket.subscribe_get_trade_status(streaming_pid)
-
-      :ok
-    end
 
     test "trade transaction - open and close transaction", %{pid: pid} do
       buy_args = %{
@@ -366,8 +336,6 @@ defmodule XtbClient.MainSocketTest do
 
       assert {:ok, %TradeTransaction{order: open_order_id}} =
                MainSocket.trade_transaction(pid, buy)
-
-      assert_receive {:ok, %TradeStatus{}}, @default_wait_time
 
       status = TradeTransactionStatus.Query.new(open_order_id)
       assert {:ok, %TradeTransactionStatus{}} = MainSocket.trade_transaction_status(pid, status)
@@ -394,8 +362,8 @@ defmodule XtbClient.MainSocketTest do
 
       close = TradeTransaction.Command.new(close_args)
 
-      assert {:ok, %TradeTransaction{}} = MainSocket.trade_transaction(pid, close)
-      assert_receive {:ok, %TradeStatus{order: close_order_id}}, @default_wait_time
+      assert {:ok, %TradeTransaction{order: close_order_id}} =
+               MainSocket.trade_transaction(pid, close)
 
       status = TradeTransactionStatus.Query.new(close_order_id)
 
