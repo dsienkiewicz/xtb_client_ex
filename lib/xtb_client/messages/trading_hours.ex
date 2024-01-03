@@ -45,8 +45,10 @@ defmodule XtbClient.Messages.TradingHours do
   def new(data) when is_list(data) do
     %__MODULE__{
       data:
-        data
-        |> Enum.map(&TradingHour.new(&1))
+        Enum.map(
+          data,
+          &TradingHour.new(&1)
+        )
     }
   end
 end

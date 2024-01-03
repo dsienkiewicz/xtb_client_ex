@@ -6,20 +6,18 @@ defmodule XtbClient.Messages.TransactionStatus do
   @type t :: :error | :pending | :accepted | :rejected
   @type status_code :: 0 | 1 | 3 | 4
 
+  @map [
+    error: 0,
+    pending: 1,
+    accepted: 3,
+    rejected: 4
+  ]
+
   @doc """
   Parse integer value as valid atom for transaction status.
   """
   @spec parse(value :: status_code()) :: t()
-  def parse(value) when value in [0, 1, 3, 4] do
-    parse_status(value)
-  end
-
-  defp parse_status(value) do
-    case value do
-      0 -> :error
-      1 -> :pending
-      3 -> :accepted
-      4 -> :rejected
-    end
+  for {status, value} <- @map do
+    def parse(unquote(value)), do: unquote(status)
   end
 end

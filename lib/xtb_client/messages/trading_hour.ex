@@ -29,9 +29,9 @@ defmodule XtbClient.Messages.TradingHour do
       })
       when is_list(quotes) and is_list(trading) do
     %__MODULE__{
-      quotes: quotes |> Enum.map(&Quote.new(&1)),
+      quotes: Enum.map(quotes, &Quote.new(&1)),
       symbol: symbol || "",
-      trading: trading |> Enum.map(&Quote.new(&1))
+      trading: Enum.map(trading, &Quote.new(&1))
     }
   end
 end

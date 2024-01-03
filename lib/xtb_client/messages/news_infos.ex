@@ -21,9 +21,7 @@ defmodule XtbClient.Messages.NewsInfos do
 
   def new(data) when is_list(data) do
     %__MODULE__{
-      data:
-        data
-        |> Enum.map(&NewsInfo.new(&1))
+      data: Enum.map(data, &NewsInfo.new(&1))
     }
   end
 

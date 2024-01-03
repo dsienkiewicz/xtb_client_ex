@@ -158,6 +158,7 @@ defmodule XtbClient.Messages.TradeInfo do
     }
   end
 
+  # credo:disable-for-next-line
   def new(%{
         "close_price" => close_price,
         "close_time" => close_time_value,

@@ -3,6 +3,11 @@ defmodule XtbClient.Error do
   Struct to represent errors returned by the XTB API
   """
 
+  @type t :: %__MODULE__{
+          code: String.t(),
+          message: String.t()
+        }
+
   @enforce_keys [:code, :message]
   defstruct [:code, :message]
 

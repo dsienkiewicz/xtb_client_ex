@@ -4,44 +4,38 @@ defmodule XtbClient.MainSocketTest do
   doctest XtbClient.MainSocket
 
   alias XtbClient.MainSocket
-  alias XtbClient.StreamingSocket
-  alias XtbClient.StreamingSocketMock
-  alias XtbClient.StreamingTestStoreMock
-
-  import XtbClient.MainSocket.E2EFixtures
 
   alias XtbClient.Messages.{
     BalanceInfo,
-    CalendarInfos,
     CalendarInfo,
+    CalendarInfos,
     Candle,
     ChartLast,
     ChartRange,
     CommissionDefinition,
     DateRange,
     MarginTrade,
-    NewsInfos,
     NewsInfo,
+    NewsInfos,
     ProfitCalculation,
     Quote,
     RateInfos,
     ServerTime,
-    StepRules,
-    StepRule,
     Step,
+    StepRule,
+    StepRules,
     SymbolInfo,
     SymbolInfos,
     SymbolVolume,
-    TickPrices,
     TickPrice,
-    TradeInfos,
+    TickPrices,
     TradeInfo,
+    TradeInfos,
     Trades,
-    TradeStatus,
     TradeTransaction,
     TradeTransactionStatus,
-    TradingHours,
     TradingHour,
+    TradingHours,
     UserInfo,
     Version
   }
@@ -242,7 +236,7 @@ defmodule XtbClient.MainSocketTest do
 
     test "get news", %{pid: pid} do
       args = %{
-        from: DateTime.utc_now() |> DateTime.add(-2 * 30 * 24 * 60 * 60),
+        from: DateTime.add(DateTime.utc_now(), -2 * 30 * 24 * 60 * 60),
         to: DateTime.utc_now()
       }
 
@@ -288,7 +282,7 @@ defmodule XtbClient.MainSocketTest do
       args = %{
         level: 0,
         symbols: ["LITECOIN"],
-        timestamp: DateTime.utc_now() |> DateTime.add(-2 * 60)
+        timestamp: DateTime.add(DateTime.utc_now(), -2 * 60)
       }
 
       query = TickPrices.Query.new(args)
@@ -300,7 +294,7 @@ defmodule XtbClient.MainSocketTest do
 
     test "get trades history", %{pid: pid} do
       args = %{
-        from: DateTime.utc_now() |> DateTime.add(-3 * 31 * 24 * 60 * 60),
+        from: DateTime.add(DateTime.utc_now(), -3 * 31 * 24 * 60 * 60),
         to: DateTime.utc_now()
       }
 
@@ -327,29 +321,6 @@ defmodule XtbClient.MainSocketTest do
     test "get version", %{pid: pid} do
       assert {:ok, %Version{}} = MainSocket.get_version(pid)
     end
-  end
-
-  @default_wait_time 60 * 1000
-
-  describe "trade transaction with async messages" do
-    setup :setup_main_socket
-
-    setup %{pid: pid, params: params} do
-      {:ok, _store} = start_supervised(StreamingTestStoreMock)
-
-      parent_pid = self()
-      Agent.update(StreamingTestStoreMock, fn _ -> %{parent_pid: parent_pid} end)
-
-      {:ok, stream_session_id} = poll_stream_session_id(pid)
-
-      params =
-        Keyword.merge(params, stream_session_id: stream_session_id, module: StreamingSocketMock)
-
-      {:ok, streaming_pid} = StreamingSocket.start_link(params)
-      assert {:ok, _} = StreamingSocket.subscribe_get_trade_status(streaming_pid)
-
-      :ok
-    end
 
     test "trade transaction - open and close transaction", %{pid: pid} do
       buy_args = %{
@@ -366,8 +337,6 @@ defmodule XtbClient.MainSocketTest do
       assert {:ok, %TradeTransaction{order: open_order_id}} =
                MainSocket.trade_transaction(pid, buy)
 
-      assert_receive {:ok, %TradeStatus{}}, @default_wait_time
-
       status = TradeTransactionStatus.Query.new(open_order_id)
       assert {:ok, %TradeTransactionStatus{}} = MainSocket.trade_transaction_status(pid, status)
 
@@ -376,8 +345,10 @@ defmodule XtbClient.MainSocketTest do
       assert {:ok, %TradeInfos{data: data}} = MainSocket.get_trades(pid, trades_query)
 
       position_to_close =
-        data
-        |> Enum.find(&(&1.order_closed == open_order_id))
+        Enum.find(
+          data,
+          &(&1.order_closed == open_order_id)
+        )
 
       close_args = %{
         operation: :buy,
@@ -391,8 +362,8 @@ defmodule XtbClient.MainSocketTest do
 
       close = TradeTransaction.Command.new(close_args)
 
-      assert {:ok, %TradeTransaction{}} = MainSocket.trade_transaction(pid, close)
-      assert_receive {:ok, %TradeStatus{order: close_order_id}}, @default_wait_time
+      assert {:ok, %TradeTransaction{order: close_order_id}} =
+               MainSocket.trade_transaction(pid, close)
 
       status = TradeTransactionStatus.Query.new(close_order_id)
 

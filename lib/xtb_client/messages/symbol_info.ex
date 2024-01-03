@@ -227,6 +227,7 @@ defmodule XtbClient.Messages.SymbolInfo do
             trailing_enabled: nil,
             type: 0
 
+  # credo:disable-for-next-line
   def new(%{
         "ask" => ask,
         "bid" => bid,
