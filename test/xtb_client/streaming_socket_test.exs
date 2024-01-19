@@ -34,7 +34,7 @@ defmodule XtbClient.StreamingSocketTest do
     ]
 
     {:ok, pid} = start_supervised({MainSocket, params})
-    {:ok, stream_session_id} = poll_stream_session_id(pid)
+    {:ok, stream_session_id} = MainSocket.stream_session_id(pid)
 
     {:ok,
      %{
@@ -91,7 +91,6 @@ defmodule XtbClient.StreamingSocketTest do
   describe "public API" do
     setup context do
       {:ok, pid} = start_supervised({StreamingSocket, context.params})
-
       {:ok, _store} = start_supervised(StreamingTestStoreMock)
 
       parent_pid = self()

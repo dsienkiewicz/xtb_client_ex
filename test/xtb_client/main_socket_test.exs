@@ -103,10 +103,6 @@ defmodule XtbClient.MainSocketTest do
     setup :setup_main_socket
 
     test "stream_session_id is present", %{pid: pid} do
-      # needed to wait for socket to connect
-      # during that time stream_session_id should be available
-      Process.sleep(100)
-
       {:ok, stream_session_id} = MainSocket.stream_session_id(pid)
       assert is_binary(stream_session_id)
     end

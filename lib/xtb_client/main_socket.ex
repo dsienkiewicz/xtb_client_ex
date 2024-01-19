@@ -110,7 +110,27 @@ defmodule XtbClient.MainSocket do
       rate_limit: RateLimit.new(200)
     }
 
-    WebSockex.start_link(url, __MODULE__, state, opts)
+    case WebSockex.start_link(url, __MODULE__, state, opts) do
+      {:ok, pid} = result ->
+        _ = poll_stream_session_id(pid)
+
+        result
+
+      other ->
+        other
+    end
+  end
+
+  defp poll_stream_session_id(server) do
+    case stream_session_id(server) do
+      {:ok, nil} ->
+        Process.sleep(10)
+
+        poll_stream_session_id(server)
+
+      {:ok, _session_id} = result ->
+        result
+    end
   end
 
   @impl WebSockex
@@ -136,6 +156,7 @@ defmodule XtbClient.MainSocket do
 
   @impl WebSockex
   def handle_disconnect(_connection_status_map, state) do
+    Logger.warning("Socket reconnecting")
     {:reconnect, state}
   end
 
