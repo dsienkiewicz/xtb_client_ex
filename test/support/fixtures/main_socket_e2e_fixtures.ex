@@ -4,17 +4,6 @@ defmodule XtbClient.MainSocket.E2EFixtures do
   alias XtbClient.MainSocket
   alias XtbClient.Messages.{Trades, TradeTransaction}
 
-  def poll_stream_session_id(server) do
-    case MainSocket.stream_session_id(server) do
-      {:ok, nil} ->
-        Process.sleep(100)
-        poll_stream_session_id(server)
-
-      {:ok, _session_id} = result ->
-        result
-    end
-  end
-
   def open_trade(pid, buy_args) do
     buy = TradeTransaction.Command.new(buy_args)
     MainSocket.trade_transaction(pid, buy)
