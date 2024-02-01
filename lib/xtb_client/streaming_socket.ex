@@ -25,6 +25,8 @@ defmodule XtbClient.StreamingSocket do
 
   @ping_interval 30 * 1000
 
+  @type metadata :: map()
+
   defmodule Config do
     @moduledoc false
 
@@ -79,10 +81,13 @@ defmodule XtbClient.StreamingSocket do
   ## Params:
   - `token` - unique token of the subscribed method & params,
   - `message` - struct with response data
+  - `metadata` - map with additional context data attached to subscription
+
   """
   @callback handle_message(
-              token :: StreamingMessage.token(),
-              message :: struct()
+              token :: StreamingMessage.t(),
+              message :: struct(),
+              metadata :: metadata()
             ) :: :ok
 
   @doc """
@@ -90,8 +95,10 @@ defmodule XtbClient.StreamingSocket do
 
   ## Params:
   - `error` - struct with error data
+  - `metadata` - map with additional context data attached to subscription
+
   """
-  @callback handle_error(error :: Error.t()) :: :ok
+  @callback handle_error(error :: Error.t(), metadata :: metadata()) :: :ok
 
   @doc false
   defmacro __using__(_opts) do
@@ -99,16 +106,16 @@ defmodule XtbClient.StreamingSocket do
       @behaviour XtbClient.StreamingSocket
 
       @doc false
-      def handle_message(token, message) do
+      def handle_message(token, message, _metadata) do
         raise "No handle_message/2 clause in #{__MODULE__} provided for #{inspect(message)}"
       end
 
       @doc false
-      def handle_error(error) do
+      def handle_error(error, _metadata) do
         raise "No handle_error/1 clause in #{__MODULE__} provided for #{inspect(error)}"
       end
 
-      defoverridable handle_message: 2, handle_error: 1
+      defoverridable handle_message: 3, handle_error: 2
     end
   end
 
@@ -156,13 +163,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.BalanceInfo` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_get_balance(socket :: GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_balance(socket) do
-    with message <- StreamingMessage.new("getBalance", "balance"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_get_balance(socket :: GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_balance(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getBalance", "balance", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -172,12 +178,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from stream of account indicators.
   """
   @spec unsubscribe_get_balance(socket :: GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_balance(socket) do
-    with message <- StreamingMessage.new("stopBalance", "balance"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopBalance", "balance", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -192,13 +197,13 @@ defmodule XtbClient.StreamingSocket do
   """
   @spec subscribe_get_candles(
           GenServer.server(),
-          XtbClient.Messages.Candles.Query.t()
-        ) :: {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_candles(socket, %Messages.Candles.Query{} = params) do
-    with message <- StreamingMessage.new("getCandles", "candle", params),
-         token <- StreamingMessage.encode_token(message),
+          XtbClient.Messages.Candles.Query.t(),
+          metadata :: metadata()
+        ) :: {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_candles(socket, %Messages.Candles.Query{} = params, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getCandles", "candle", metadata, params),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -210,12 +215,11 @@ defmodule XtbClient.StreamingSocket do
   @spec unsubscribe_get_candles(
           GenServer.server(),
           XtbClient.Messages.Candles.Query.t()
-        ) :: {:ok, StreamingMessage.token()} | {:error, term()}
+        ) :: {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_candles(socket, %Messages.Candles.Query{} = params) do
-    with message <- StreamingMessage.new("stopCandles", "candle", params),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopCandles", "candle", %{}, params),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -228,13 +232,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.KeepAlive` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_keep_alive(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_keep_alive(socket) do
-    with message <- StreamingMessage.new("getKeepAlive", "keepAlive"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_keep_alive(GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_keep_alive(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getKeepAlive", "keepAlive", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -244,12 +247,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from `keep alive` messages.
   """
   @spec unsubscribe_keep_alive(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_keep_alive(socket) do
-    with message <- StreamingMessage.new("stopKeepAlive", "keepAlive"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopKeepAlive", "keepAlive", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -261,13 +263,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.NewsInfos` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_get_news(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_news(socket) do
-    with message <- StreamingMessage.new("getNews", "news"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_get_news(GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_news(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getNews", "news", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -277,12 +278,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from news stream.
   """
   @spec unsubscribe_get_news(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_news(socket) do
-    with message <- StreamingMessage.new("stopNews", "news"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopNews", "news", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -294,13 +294,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.ProfitInfo` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_get_profits(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_profits(socket) do
-    with message <- StreamingMessage.new("getProfits", "profit"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_get_profits(GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_profits(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getProfits", "profit", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -310,12 +309,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from profits stream.
   """
   @spec unsubscribe_get_profits(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_profits(socket) do
-    with message <- StreamingMessage.new("stopProfits", "profit"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopProfits", "profit", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -331,14 +329,14 @@ defmodule XtbClient.StreamingSocket do
   """
   @spec subscribe_get_tick_prices(
           GenServer.server(),
-          XtbClient.Messages.Quotations.Query.t()
+          XtbClient.Messages.Quotations.Query.t(),
+          metadata :: metadata()
         ) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_tick_prices(socket, %Messages.Quotations.Query{} = params) do
-    with message <- StreamingMessage.new("getTickPrices", "tickPrices", params),
-         token <- StreamingMessage.encode_token(message),
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_tick_prices(socket, %Messages.Quotations.Query{} = params, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getTickPrices", "tickPrices", metadata, params),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -351,12 +349,11 @@ defmodule XtbClient.StreamingSocket do
           GenServer.server(),
           XtbClient.Messages.Quotations.Query.t()
         ) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_tick_prices(socket, %Messages.Quotations.Query{} = params) do
-    with message <- StreamingMessage.new("stopTickPrices", "tickPrices", params),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopTickPrices", "tickPrices", %{}, params),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -369,13 +366,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.TradeInfos` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_get_trades(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_trades(socket) do
-    with message <- StreamingMessage.new("getTrades", "trade"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_get_trades(GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_trades(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getTrades", "trade", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -385,12 +381,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from user trade status stream.
   """
   @spec unsubscribe_get_trades(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_trades(socket) do
-    with message <- StreamingMessage.new("stopTrades", "trade"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopTrades", "trade", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -403,13 +398,12 @@ defmodule XtbClient.StreamingSocket do
   Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
   When the new data are available, the `XtbClient.Messages.TradeStatus` struct is sent via `handle_message/2` callback.
   """
-  @spec subscribe_get_trade_status(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
-  def subscribe_get_trade_status(socket) do
-    with message <- StreamingMessage.new("getTradeStatus", "tradeStatus"),
-         token <- StreamingMessage.encode_token(message),
+  @spec subscribe_get_trade_status(GenServer.server(), metadata :: metadata()) ::
+          {:ok, StreamingMessage.t()} | {:error, term()}
+  def subscribe_get_trade_status(socket, metadata \\ %{}) do
+    with message <- StreamingMessage.new("getTradeStatus", "tradeStatus", metadata),
          :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -419,12 +413,11 @@ defmodule XtbClient.StreamingSocket do
   Unsubscribes from status for sent trade requests stream.
   """
   @spec unsubscribe_get_trade_status(GenServer.server()) ::
-          {:ok, StreamingMessage.token()} | {:error, term()}
+          {:ok, StreamingMessage.t()} | {:error, term()}
   def unsubscribe_get_trade_status(socket) do
-    with message <- StreamingMessage.new("stopTradeStatus", "tradeStatus"),
-         token <- StreamingMessage.encode_token(message),
+    with message <- StreamingMessage.new("stopTradeStatus", "tradeStatus", %{}),
          :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, token}
+      {:ok, message}
     else
       err -> {:error, err}
     end
@@ -452,7 +445,7 @@ defmodule XtbClient.StreamingSocket do
       Map.put(
         subscriptions,
         response_method,
-        StreamingMessage.encode_token(message)
+        message
       )
 
     encoded_message = encode_streaming_command({method, params}, session_id)
@@ -508,15 +501,15 @@ defmodule XtbClient.StreamingSocket do
   @impl WebSockex
   def handle_frame({:text, msg}, %State{module: module} = state) do
     with {:ok, resp} <- Jason.decode(msg),
-         {:ok, {token, message}} <- handle_response(resp, state),
-         :ok <- module.handle_message(token, message) do
+         {:ok, {token, message, metadata}} <- handle_response(resp, state),
+         :ok <- module.handle_message(token, message, metadata) do
       {:ok, state}
     else
       {:ok, _} = result ->
         result
 
       {:error, error} ->
-        module.handle_error(error)
+        module.handle_error(error, %{})
         {:ok, state}
     end
   end
@@ -526,9 +519,10 @@ defmodule XtbClient.StreamingSocket do
          %State{subscriptions: subscriptions} = _state
        ) do
     with token <- Map.get(subscriptions, response_method),
-         method <- StreamingMessage.decode_method_name(token),
+         method <- StreamingMessage.get_method_name(token),
+         metadata <- StreamingMessage.get_metadata(token),
          result <- Messages.decode_message(method, data) do
-      {:ok, {token, result}}
+      {:ok, {token, result, metadata}}
     end
   end
 

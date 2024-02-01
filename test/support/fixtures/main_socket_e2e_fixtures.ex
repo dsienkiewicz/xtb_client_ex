@@ -20,7 +20,7 @@ defmodule XtbClient.MainSocket.E2EFixtures do
       Map.merge(
         close_args,
         %{
-          price: position_to_close.open_price - 0.01,
+          price: 0.01,
           order: position_to_close.order_opened
         }
       )

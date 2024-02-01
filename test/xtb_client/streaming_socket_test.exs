@@ -100,7 +100,8 @@ defmodule XtbClient.StreamingSocketTest do
     end
 
     test "subscribe to get balance", %{pid: pid, main: main} do
-      assert {:ok, _} = StreamingSocket.subscribe_get_balance(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_get_balance(pid, metadata)
 
       buy_args = %{
         operation: :buy,
@@ -113,7 +114,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.BalanceInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.BalanceInfo{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
 
       close_args = %{
         operation: :buy,
@@ -125,7 +127,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      assert_receive {:ok, %Messages.BalanceInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.BalanceInfo{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from get balance", %{pid: pid, main: main} do
@@ -142,7 +145,7 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.BalanceInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.BalanceInfo{}, _metadata}, @default_wait_time
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_balance(pid)
 
@@ -156,16 +159,18 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      refute_receive {:ok, %Messages.BalanceInfo{}}, 100
+      refute_receive {:ok, %Messages.BalanceInfo{}, _metadata}, 100
     end
 
     @tag timeout: @default_wait_time
     test "subscribe to get candles", %{pid: pid} do
+      metadata = %{hash: :rand.uniform(1_000)}
       args = "LITECOIN"
       query = Messages.Candles.Query.new(args)
-      assert {:ok, _} = StreamingSocket.subscribe_get_candles(pid, query)
+      assert {:ok, _} = StreamingSocket.subscribe_get_candles(pid, query, metadata)
 
-      assert_receive {:ok, %Messages.Candle{}}, @default_wait_time
+      assert_receive {:ok, %Messages.Candle{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     @tag timeout: @default_wait_time * 2
@@ -174,58 +179,63 @@ defmodule XtbClient.StreamingSocketTest do
       query = Messages.Candles.Query.new(args)
       assert {:ok, _} = StreamingSocket.subscribe_get_candles(pid, query)
 
-      assert_receive {:ok, %Messages.Candle{}}, @default_wait_time
+      assert_receive {:ok, %Messages.Candle{}, _metadata}, @default_wait_time
 
       # wait for already received messages
       flush()
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_candles(pid, query)
 
-      refute_receive {:ok, %Messages.Candle{}}, 100
+      refute_receive {:ok, %Messages.Candle{}, _metadata}, 100
     end
 
     test "subscribe to keep alive", %{pid: pid} do
-      assert {:ok, _} = StreamingSocket.subscribe_keep_alive(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_keep_alive(pid, metadata)
 
-      assert_receive {:ok, %Messages.KeepAlive{}}, @default_wait_time
+      assert_receive {:ok, %Messages.KeepAlive{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from keep alive", %{pid: pid} do
       assert {:ok, _} = StreamingSocket.subscribe_keep_alive(pid)
 
-      assert_receive {:ok, %Messages.KeepAlive{}}, @default_wait_time
+      assert_receive {:ok, %Messages.KeepAlive{}, _metadata}, @default_wait_time
 
       # wait for already received messages
       flush()
 
       assert {:ok, _} = StreamingSocket.unsubscribe_keep_alive(pid)
 
-      refute_receive {:ok, %Messages.KeepAlive{}}, 100
+      refute_receive {:ok, %Messages.KeepAlive{}, _metadata}, 100
     end
 
     @tag skip: true
     test "subscribe to get news", %{pid: pid} do
-      assert {:ok, _} = StreamingSocket.subscribe_get_news(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_get_news(pid, metadata)
 
-      assert_receive {:ok, %Messages.NewsInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.NewsInfo{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     @tag skip: true
     test "unsubscribe from get news", %{pid: pid} do
       assert {:ok, _} = StreamingSocket.subscribe_get_news(pid)
 
-      assert_receive {:ok, %Messages.NewsInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.NewsInfo{}, _metadata}, @default_wait_time
 
       # wait for already received messages
       flush()
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_news(pid)
 
-      refute_receive {:ok, %Messages.NewsInfo{}}, 100
+      refute_receive {:ok, %Messages.NewsInfo{}, _metadata}, 100
     end
 
     test "subscribe to get profits", %{pid: pid, main: main} do
-      assert {:ok, _} = StreamingSocket.subscribe_get_profits(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_get_profits(pid, metadata)
 
       buy_args = %{
         operation: :buy,
@@ -238,7 +248,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.ProfitInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.ProfitInfo{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
 
       close_args = %{
         operation: :buy,
@@ -250,7 +261,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      assert_receive {:ok, %Messages.ProfitInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.ProfitInfo{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from get profits", %{pid: pid, main: main} do
@@ -267,7 +279,7 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.ProfitInfo{}}, @default_wait_time
+      assert_receive {:ok, %Messages.ProfitInfo{}, _metadata}, @default_wait_time
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_profits(pid)
 
@@ -281,15 +293,17 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      refute_receive {:ok, %Messages.ProfitInfo{}}, 100
+      refute_receive {:ok, %Messages.ProfitInfo{}, _metadata}, 100
     end
 
     test "subscribe to get tick prices", %{pid: pid} do
+      metadata = %{hash: :rand.uniform(1_000)}
       args = %{symbol: "LITECOIN"}
       query = Messages.Quotations.Query.new(args)
-      assert {:ok, _} = StreamingSocket.subscribe_get_tick_prices(pid, query)
+      assert {:ok, _} = StreamingSocket.subscribe_get_tick_prices(pid, query, metadata)
 
-      assert_receive {:ok, %Messages.TickPrice{}}, @default_wait_time
+      assert_receive {:ok, %Messages.TickPrice{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from get tick prices", %{pid: pid} do
@@ -297,18 +311,19 @@ defmodule XtbClient.StreamingSocketTest do
       query = Messages.Quotations.Query.new(args)
       assert {:ok, _} = StreamingSocket.subscribe_get_tick_prices(pid, query)
 
-      assert_receive {:ok, %Messages.TickPrice{}}, @default_wait_time
+      assert_receive {:ok, %Messages.TickPrice{}, _metadata}, @default_wait_time
 
       # wait for already received messages
       flush()
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_tick_prices(pid, query)
 
-      refute_receive {:ok, %Messages.TickPrice{}}, 100
+      refute_receive {:ok, %Messages.TickPrice{}, _metadata}, 100
     end
 
     test "subscribe to get trades", %{pid: pid, main: main} do
-      assert {:ok, _} = StreamingSocket.subscribe_get_trades(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_get_trades(pid, metadata)
 
       buy_args = %{
         operation: :buy,
@@ -321,8 +336,10 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.TradeInfo{operation: :buy}},
+      assert_receive {:ok, %Messages.TradeInfo{operation: :buy}, received_metadata},
                      @default_wait_time
+
+      assert ^metadata = received_metadata
 
       close_args = %{
         operation: :buy,
@@ -334,7 +351,10 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      assert_receive {:ok, %Messages.TradeInfo{operation: :sell}}, @default_wait_time
+      assert_receive {:ok, %Messages.TradeInfo{operation: :sell}, received_metadata},
+                     @default_wait_time
+
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from get trades", %{pid: pid, main: main} do
@@ -351,7 +371,7 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.TradeInfo{operation: :buy}},
+      assert_receive {:ok, %Messages.TradeInfo{operation: :buy}, _metadata},
                      @default_wait_time
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_trades(pid)
@@ -366,11 +386,12 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      refute_receive {:ok, %Messages.TradeInfo{operation: :sell}}, 100
+      refute_receive {:ok, %Messages.TradeInfo{operation: :sell}, _metadata}, 100
     end
 
     test "subscribe to trade status", %{pid: pid, main: main} do
-      assert {:ok, _} = StreamingSocket.subscribe_get_trade_status(pid)
+      metadata = %{hash: :rand.uniform(1_000)}
+      assert {:ok, _} = StreamingSocket.subscribe_get_trade_status(pid, metadata)
 
       buy_args = %{
         operation: :buy,
@@ -383,7 +404,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.TradeStatus{}}, @default_wait_time
+      assert_receive {:ok, %Messages.TradeStatus{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
 
       close_args = %{
         operation: :buy,
@@ -395,7 +417,8 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      assert_receive {:ok, %Messages.TradeStatus{}}, @default_wait_time
+      assert_receive {:ok, %Messages.TradeStatus{}, received_metadata}, @default_wait_time
+      assert ^metadata = received_metadata
     end
 
     test "unsubscribe from trade status", %{pid: pid, main: main} do
@@ -412,7 +435,7 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, %{order: order_id}} = open_trade(main, buy_args)
 
-      assert_receive {:ok, %Messages.TradeStatus{}}, @default_wait_time
+      assert_receive {:ok, %Messages.TradeStatus{}, _metadata}, @default_wait_time
 
       assert {:ok, _} = StreamingSocket.unsubscribe_get_trade_status(pid)
 
@@ -426,7 +449,7 @@ defmodule XtbClient.StreamingSocketTest do
 
       {:ok, _} = close_trade(main, order_id, close_args)
 
-      refute_receive {:ok, %Messages.TradeStatus{}}, 100
+      refute_receive {:ok, %Messages.TradeStatus{}, _metadata}, 100
     end
   end
 

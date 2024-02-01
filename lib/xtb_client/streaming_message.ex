@@ -6,40 +6,30 @@ defmodule XtbClient.StreamingMessage do
   @type t :: %__MODULE__{
           method: String.t(),
           response_method: String.t(),
+          metadata: map(),
           params: map() | nil
         }
-  @type token :: {:method, String.t()} | {:hashed_params, String.t(), String.t()}
 
-  @enforce_keys [:method, :response_method, :params]
+  @enforce_keys [:method, :response_method, :metadata, :params]
   defstruct method: "",
             response_method: "",
+            metadata: %{},
             params: nil
 
-  def new(method, response_method, params \\ nil) do
+  def new(method, response_method, metadata, params \\ nil) do
     %__MODULE__{
       method: method,
       response_method: response_method,
+      metadata: metadata,
       params: params
     }
   end
 
-  def encode_token(%__MODULE__{method: "getTrades" = method_name}) do
-    {:method, method_name}
+  def get_method_name(%__MODULE__{method: method_name}) do
+    method_name
   end
 
-  def encode_token(%__MODULE__{method: method_name, params: %{symbol: symbol}}) do
-    {:hashed_params, method_name, symbol}
-  end
-
-  def encode_token(%__MODULE__{method: method_name}) do
-    {:method, method_name}
-  end
-
-  def decode_method_name({:method, method}) do
-    method
-  end
-
-  def decode_method_name({:hashed_params, method, _symbol}) do
-    method
+  def get_metadata(%__MODULE__{metadata: metadata}) do
+    metadata
   end
 end
