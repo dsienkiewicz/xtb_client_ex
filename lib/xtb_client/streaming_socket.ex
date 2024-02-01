@@ -85,7 +85,7 @@ defmodule XtbClient.StreamingSocket do
 
   """
   @callback handle_message(
-              token :: StreamingMessage.token(),
+              token :: StreamingMessage.t(),
               message :: struct(),
               metadata :: metadata()
             ) :: :ok
