@@ -6,7 +6,7 @@ defmodule XtbClient.StreamingSocketMock do
   @store_mock XtbClient.StreamingTestStoreMock
 
   @impl XtbClient.StreamingSocket
-  def handle_message(_token, message) do
+  def handle_message(_token, message, metadata) do
     alive? = Process.whereis(@store_mock)
 
     case alive? do
@@ -20,13 +20,13 @@ defmodule XtbClient.StreamingSocketMock do
             fn %{parent_pid: pid} -> pid end
           )
 
-        send(parent_pid, {:ok, message})
+        send(parent_pid, {:ok, message, metadata})
         :ok
     end
   end
 
   @impl XtbClient.StreamingSocket
-  def handle_error(error) do
+  def handle_error(error, metadata) do
     alive? = Process.whereis(@store_mock)
 
     case alive? do
@@ -40,7 +40,7 @@ defmodule XtbClient.StreamingSocketMock do
             fn %{parent_pid: pid} -> pid end
           )
 
-        send(parent_pid, {:error, error})
+        send(parent_pid, {:error, error, metadata})
         :ok
     end
   end
