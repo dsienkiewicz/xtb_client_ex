@@ -511,10 +511,6 @@ defmodule XtbClient.StreamingSocket do
       {:error, error} ->
         module.handle_error(error, %{})
         {:ok, state}
-
-      {:error, error} ->
-        module.handle_error(error, %{})
-        {:ok, state}
     end
   end
 
