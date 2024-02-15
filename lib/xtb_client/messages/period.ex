@@ -18,6 +18,9 @@ defmodule XtbClient.Messages.Period do
     mn1: 43_200
   ]
 
+  defguard is_period(atom)
+           when is_atom(atom) and atom in [:m1, :m5, :m15, :m30, :h1, :h4, :d1, :w1, :mn1]
+
   @doc """
   Parses value given as number of minutes to `Period` atom type.
   """
