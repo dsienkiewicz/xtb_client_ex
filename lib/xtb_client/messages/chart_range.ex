@@ -20,10 +20,12 @@ defmodule XtbClient.Messages.ChartRange do
 
     alias XtbClient.Messages.{DateRange, Period}
 
+    import Period
+
     @type t :: %__MODULE__{
             start: integer(),
             end: integer(),
-            period: Period.t(),
+            period: Period.minute_period(),
             symbol: String.t(),
             ticks: integer()
           }
@@ -48,7 +50,7 @@ defmodule XtbClient.Messages.ChartRange do
           period: period,
           symbol: symbol
         })
-        when is_atom(period) and is_binary(symbol) do
+        when is_period(period) and is_binary(symbol) do
       %__MODULE__{
         start: start,
         end: end_value,
