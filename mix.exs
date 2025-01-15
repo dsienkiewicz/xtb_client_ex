@@ -39,7 +39,6 @@ defmodule XtbClient.MixProject do
 
       # Dev & test only
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:dotenvy, "~> 0.6.0", only: [:dev, :test]},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]

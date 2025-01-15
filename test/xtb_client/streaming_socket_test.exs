@@ -11,19 +11,12 @@ defmodule XtbClient.StreamingSocketTest do
 
   import XtbClient.MainSocket.E2EFixtures
 
-  @default_wait_time 60 * 1000
+  @default_wait_time :timer.seconds(1)
 
   setup do
-    Dotenvy.source([
-      ".env.#{Mix.env()}",
-      ".env.#{Mix.env()}.override",
-      System.get_env()
-    ])
-
-    url = Dotenvy.env!("XTB_API_URL", :string!)
-    user = Dotenvy.env!("XTB_API_USERNAME", :string!)
-    passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
-    type = :demo
+    url = System.get_env("XTB_API_URL")
+    user = System.get_env("XTB_API_USERNAME")
+    passwd = System.get_env("XTB_API_PASSWORD")
 
     params = [
       url: url,
@@ -40,7 +33,7 @@ defmodule XtbClient.StreamingSocketTest do
      %{
        params: [
          url: url,
-         type: type,
+         type: :demo,
          stream_session_id: stream_session_id,
          module: StreamingSocketMock
        ],
@@ -49,11 +42,11 @@ defmodule XtbClient.StreamingSocketTest do
   end
 
   describe "session management" do
-    @tag timeout: 40 * 1000
+    @tag timeout: :timer.seconds(40)
     test "sends ping after login", %{params: params} do
       {:ok, pid} = StreamingSocket.start_link(params)
 
-      Process.sleep(30 * 1000 + 1)
+      Process.sleep(:timer.seconds(30) + 1)
 
       assert Process.alive?(pid) == true
     end
