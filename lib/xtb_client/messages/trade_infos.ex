@@ -11,15 +11,16 @@ defmodule XtbClient.Messages.TradeInfos do
   - `getTradesHistory`
   """
 
-  alias XtbClient.Messages.TradeInfo
-
   defmodule Query do
     @moduledoc """
-    Info about query for trade infos.
+    Returns array of trades listed in orders query.
 
     ## Parameters
-    - `orders` array of order IDs.
+    - `orders` - array of order IDs.
     """
+    alias XtbClient.Messages.TradeInfos
+
+    @behaviour XtbClient.Message
 
     @type t :: %__MODULE__{
             orders: [String.t()]
@@ -34,7 +35,18 @@ defmodule XtbClient.Messages.TradeInfos do
         orders: orders
       }
     end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getTradeRecords"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: TradeInfos.new(data)
   end
+
+  alias XtbClient.Messages.TradeInfo
 
   @type t :: %__MODULE__{
           data: [TradeInfo.t()]

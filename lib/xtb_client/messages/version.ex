@@ -9,6 +9,33 @@ defmodule XtbClient.Messages.Version do
   - `getVersion`
   """
 
+  defmodule Query do
+    @moduledoc """
+    Returns the current API version.
+    """
+    alias XtbClient.Messages.Version
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{}
+
+    @derive Jason.Encoder
+    defstruct []
+
+    def new do
+      %__MODULE__{}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getVersion"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: Version.new(data)
+  end
+
   @type t :: %__MODULE__{
           version: String.t()
         }

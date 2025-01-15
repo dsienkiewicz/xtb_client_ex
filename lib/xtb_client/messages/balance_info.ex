@@ -20,6 +20,36 @@ defmodule XtbClient.Messages.BalanceInfo do
   - `getMarginLevel`
   """
 
+  defmodule MarginLevelQuery do
+    @moduledoc """
+    Returns various account indicators.
+
+    **Please note that this function can be usually replaced by its streaming equivalent `subscribe_get_balance/1` which is the preferred way of retrieving current account indicators.**
+    """
+    alias XtbClient.Messages.BalanceInfo
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{}
+
+    @enforce_keys []
+    @derive Jason.Encoder
+    defstruct []
+
+    def new do
+      %__MODULE__{}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getMarginLevel"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: BalanceInfo.new(data)
+  end
+
   @type t :: %__MODULE__{
           balance: float(),
           cash_stock_value: float(),

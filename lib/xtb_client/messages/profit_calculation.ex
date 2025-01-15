@@ -11,7 +11,10 @@ defmodule XtbClient.Messages.ProfitCalculation do
 
   defmodule Query do
     @moduledoc """
-    Info about query for calculation of profit.
+    Calculates estimated profit for given deal data.
+
+    Should be used for calculator-like apps only.
+    Profit for opened transactions should be taken from server, due to higher precision of server calculation.
 
     ## Parameters
     - `closePrice` theoretical close price of order,
@@ -20,8 +23,10 @@ defmodule XtbClient.Messages.ProfitCalculation do
     - `symbol` symbol name,
     - `volume` volume in lots.
     """
-
     alias XtbClient.Messages.Operation
+    alias XtbClient.Messages.ProfitCalculation
+
+    @behaviour XtbClient.Message
 
     @type t :: %__MODULE__{
             closePrice: float(),
@@ -56,6 +61,15 @@ defmodule XtbClient.Messages.ProfitCalculation do
         volume: volume
       }
     end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getProfitCalculation"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: ProfitCalculation.new(data)
   end
 
   @type t :: %__MODULE__{

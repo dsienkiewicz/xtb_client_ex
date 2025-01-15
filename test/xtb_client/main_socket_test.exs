@@ -41,15 +41,9 @@ defmodule XtbClient.MainSocketTest do
   }
 
   setup do
-    Dotenvy.source([
-      ".env.#{Mix.env()}",
-      ".env.#{Mix.env()}.override",
-      System.get_env()
-    ])
-
-    url = Dotenvy.env!("XTB_API_URL", :string!)
-    user = Dotenvy.env!("XTB_API_USERNAME", :string!)
-    passwd = Dotenvy.env!("XTB_API_PASSWORD", :string!)
+    url = System.get_env("XTB_API_URL")
+    user = System.get_env("XTB_API_USERNAME")
+    passwd = System.get_env("XTB_API_PASSWORD")
 
     params = [
       url: url,
@@ -115,13 +109,17 @@ defmodule XtbClient.MainSocketTest do
     end
 
     test "get all symbols", %{pid: pid} do
-      assert {:ok, %SymbolInfos{data: data}} = MainSocket.get_all_symbols(pid)
+      assert {:ok, %SymbolInfos{data: data}} =
+               MainSocket.handle_query(pid, SymbolInfos.Query.new())
+
       assert [elem | _] = data
       assert %SymbolInfo{} = elem
     end
 
     test "get calendar", %{pid: pid} do
-      assert {:ok, %CalendarInfos{data: data}} = MainSocket.get_calendar(pid)
+      assert {:ok, %CalendarInfos{data: data}} =
+               MainSocket.handle_query(pid, CalendarInfos.Query.new())
+
       assert [elem | _] = data
       assert %CalendarInfo{} = elem
     end
@@ -137,7 +135,7 @@ defmodule XtbClient.MainSocketTest do
 
       query = ChartLast.Query.new(args)
 
-      assert {:ok, %RateInfos{data: data, digits: digits}} = MainSocket.get_chart_last(pid, query)
+      assert {:ok, %RateInfos{data: data, digits: digits}} = MainSocket.handle_query(pid, query)
       assert is_number(digits)
       assert [elem | _] = data
 
@@ -180,7 +178,7 @@ defmodule XtbClient.MainSocketTest do
       query = ChartRange.Query.new(args)
 
       assert {:ok, %RateInfos{data: data, digits: digits}} =
-               MainSocket.get_chart_range(pid, query)
+               MainSocket.handle_query(pid, query)
 
       assert is_number(digits)
       assert [elem | _] = data
@@ -209,60 +207,65 @@ defmodule XtbClient.MainSocketTest do
     end
 
     test "get commission definition", %{pid: pid} do
-      args = %{symbol: "EURPLN", volume: 1}
-      query = SymbolVolume.new(args)
+      query =
+        %{symbol: "EURPLN", volume: 1}
+        |> SymbolVolume.new()
+        |> CommissionDefinition.Query.new()
 
-      assert {:ok, %CommissionDefinition{}} = MainSocket.get_commission_def(pid, query)
+      assert {:ok, %CommissionDefinition{}} = MainSocket.handle_query(pid, query)
     end
 
     test "get current user data", %{pid: pid} do
-      assert {:ok, %UserInfo{}} = MainSocket.get_current_user_data(pid)
+      assert {:ok, %UserInfo{}} = MainSocket.handle_query(pid, UserInfo.Query.new())
     end
 
     test "get margin level", %{pid: pid} do
-      assert {:ok, %BalanceInfo{}} = MainSocket.get_margin_level(pid)
+      assert {:ok, %BalanceInfo{}} =
+               MainSocket.handle_query(pid, BalanceInfo.MarginLevelQuery.new())
     end
 
     test "get margin trade", %{pid: pid} do
-      args = %{symbol: "EURPLN", volume: 1}
-      query = SymbolVolume.new(args)
+      query =
+        %{symbol: "EURPLN", volume: 1}
+        |> SymbolVolume.new()
+        |> MarginTrade.Query.new()
 
-      assert {:ok, %MarginTrade{}} = MainSocket.get_margin_trade(pid, query)
+      assert {:ok, %MarginTrade{}} = MainSocket.handle_query(pid, query)
     end
 
     test "get news", %{pid: pid} do
-      args = %{
-        from: DateTime.add(DateTime.utc_now(), -2 * 30 * 24 * 60 * 60),
-        to: DateTime.utc_now()
-      }
+      query =
+        %{
+          from: DateTime.add(DateTime.utc_now(), -2 * 30 * 24 * 60 * 60),
+          to: DateTime.utc_now()
+        }
+        |> DateRange.new()
+        |> NewsInfos.Query.new()
 
-      query = DateRange.new(args)
-
-      assert {:ok, %NewsInfos{data: data}} = MainSocket.get_news(pid, query)
+      assert {:ok, %NewsInfos{data: data}} = MainSocket.handle_query(pid, query)
       assert [elem | _] = data
       assert %NewsInfo{} = elem
     end
 
     test "get profit calculation", %{pid: pid} do
-      args = %{
-        open_price: 1.2233,
-        close_price: 1.3,
-        operation: :buy,
-        symbol: "EURPLN",
-        volume: 1.0
-      }
+      query =
+        ProfitCalculation.Query.new(%{
+          open_price: 1.2233,
+          close_price: 1.3,
+          operation: :buy,
+          symbol: "EURPLN",
+          volume: 1.0
+        })
 
-      query = ProfitCalculation.Query.new(args)
-
-      assert {:ok, %ProfitCalculation{}} = MainSocket.get_profit_calculation(pid, query)
+      assert {:ok, %ProfitCalculation{}} = MainSocket.handle_query(pid, query)
     end
 
     test "get server time", %{pid: pid} do
-      assert {:ok, %ServerTime{}} = MainSocket.get_server_time(pid)
+      assert {:ok, %ServerTime{}} = MainSocket.handle_query(pid, ServerTime.Query.new())
     end
 
     test "get step rules", %{pid: pid} do
-      assert {:ok, %StepRules{data: data}} = MainSocket.get_step_rules(pid)
+      assert {:ok, %StepRules{data: data}} = MainSocket.handle_query(pid, StepRules.Query.new())
       assert [elem | _] = data
       assert %StepRule{steps: [step | _]} = elem
       assert %Step{} = step
@@ -271,41 +274,40 @@ defmodule XtbClient.MainSocketTest do
     test "get symbol", %{pid: pid} do
       query = SymbolInfo.Query.new("BHW.PL_9")
 
-      assert {:ok, %SymbolInfo{}} = MainSocket.get_symbol(pid, query)
+      assert {:ok, %SymbolInfo{}} = MainSocket.handle_query(pid, query)
     end
 
     test "get tick prices", %{pid: pid} do
-      args = %{
-        level: 0,
-        symbols: ["LITECOIN"],
-        timestamp: DateTime.add(DateTime.utc_now(), -2 * 60)
-      }
+      query =
+        TickPrices.Query.new(%{
+          level: 0,
+          symbols: ["LITECOIN"],
+          timestamp: DateTime.add(DateTime.utc_now(), -2 * 60)
+        })
 
-      query = TickPrices.Query.new(args)
-
-      assert {:ok, %TickPrices{data: data}} = MainSocket.get_tick_prices(pid, query)
+      assert {:ok, %TickPrices{data: data}} = MainSocket.handle_query(pid, query)
       assert [elem | _] = data
       assert %TickPrice{} = elem
     end
 
     test "get trades history", %{pid: pid} do
-      args = %{
-        from: DateTime.add(DateTime.utc_now(), -3 * 31 * 24 * 60 * 60),
-        to: DateTime.utc_now()
-      }
+      query =
+        %{
+          from: DateTime.add(DateTime.utc_now(), -3 * 31 * 24 * 60 * 60),
+          to: DateTime.utc_now()
+        }
+        |> DateRange.new()
+        |> Trades.TradesHistoryQuery.new()
 
-      query = DateRange.new(args)
-
-      assert {:ok, %TradeInfos{data: data}} = MainSocket.get_trades_history(pid, query)
+      assert {:ok, %TradeInfos{data: data}} = MainSocket.handle_query(pid, query)
       assert [elem | _] = data
       assert %TradeInfo{} = elem
     end
 
     test "get trading hours", %{pid: pid} do
-      args = ["EURPLN", "AGO.PL_9"]
-      query = TradingHours.Query.new(args)
+      query = TradingHours.Query.new(["EURPLN", "AGO.PL_9"])
 
-      assert {:ok, %TradingHours{data: data}} = MainSocket.get_trading_hours(pid, query)
+      assert {:ok, %TradingHours{data: data}} = MainSocket.handle_query(pid, query)
       assert [elem | _] = data
       assert %TradingHour{} = elem
       assert [qu | _] = elem.quotes
@@ -315,30 +317,36 @@ defmodule XtbClient.MainSocketTest do
     end
 
     test "get version", %{pid: pid} do
-      assert {:ok, %Version{}} = MainSocket.get_version(pid)
+      assert {:ok, %Version{}} = MainSocket.handle_query(pid, Version.Query.new())
     end
 
     test "trade transaction - open and close transaction", %{pid: pid} do
-      buy_args = %{
-        operation: :buy,
-        custom_comment: "Buy transaction",
-        price: 1200.0,
-        symbol: "LITECOIN",
-        type: :open,
-        volume: 1.0
-      }
-
-      buy = TradeTransaction.Command.new(buy_args)
+      buy_command =
+        %{
+          operation: :buy,
+          price: 9999.0,
+          symbol: "LITECOIN",
+          type: :open,
+          volume: 1.0
+        }
+        |> TradeTransaction.Command.new()
+        |> TradeTransaction.Command.custom_comment("Buy transaction")
 
       assert {:ok, %TradeTransaction{order: open_order_id}} =
-               MainSocket.trade_transaction(pid, buy)
+               MainSocket.handle_query(pid, buy_command)
 
-      status = TradeTransactionStatus.Query.new(open_order_id)
-      assert {:ok, %TradeTransactionStatus{}} = MainSocket.trade_transaction_status(pid, status)
+      status_query = TradeTransactionStatus.Query.new(open_order_id)
+      assert {:ok, %TradeTransactionStatus{}} = MainSocket.handle_query(pid, status_query)
 
-      # get all opened only trades
-      trades_query = Trades.Query.new(true)
-      assert {:ok, %TradeInfos{data: data}} = MainSocket.get_trades(pid, trades_query)
+      # get trade records
+      # trade_records_query = TradeInfos.Query.new([open_order_id])
+      # assert {:ok, %TradeInfos{data: data}} = MainSocket.handle_query(pid, trade_records_query)
+      # assert [elem | _] = data
+      # assert %TradeInfo{} = elem
+
+      # get trades (opened only)
+      trades_query = Trades.TradesQuery.new(true)
+      assert {:ok, %TradeInfos{data: data}} = MainSocket.handle_query(pid, trades_query)
 
       position_to_close =
         Enum.find(
@@ -346,25 +354,25 @@ defmodule XtbClient.MainSocketTest do
           &(&1.order_closed == open_order_id)
         )
 
-      close_args = %{
-        operation: :buy,
-        custom_comment: "Close transaction",
-        price: position_to_close.open_price - 0.01,
-        symbol: "LITECOIN",
-        order: position_to_close.order_opened,
-        type: :close,
-        volume: 1.0
-      }
-
-      close = TradeTransaction.Command.new(close_args)
+      close_command =
+        %{
+          operation: :buy,
+          price: position_to_close.open_price - 0.01,
+          symbol: "LITECOIN",
+          type: :close,
+          volume: position_to_close.volume
+        }
+        |> TradeTransaction.Command.new()
+        |> TradeTransaction.Command.order(position_to_close.order_opened)
+        |> TradeTransaction.Command.custom_comment("Close transaction")
 
       assert {:ok, %TradeTransaction{order: close_order_id}} =
-               MainSocket.trade_transaction(pid, close)
+               MainSocket.handle_query(pid, close_command)
 
-      status = TradeTransactionStatus.Query.new(close_order_id)
+      status_query = TradeTransactionStatus.Query.new(close_order_id)
 
       assert {:ok, %TradeTransactionStatus{status: :accepted}} =
-               MainSocket.trade_transaction_status(pid, status)
+               MainSocket.handle_query(pid, status_query)
     end
   end
 

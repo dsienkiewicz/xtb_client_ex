@@ -14,15 +14,19 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
   - `tradeTransactionStatus`
   """
 
-  alias XtbClient.Messages.TransactionStatus
-
   defmodule Query do
     @moduledoc """
-    Info about query for trade transaction status.
+    Returns current transaction status.
+
+    At any time of transaction processing client might check the status of transaction on server side.
+    In order to do that client must provide unique order taken from `trade_transaction/2` invocation.
 
     ## Parameters
-    - `order` unique order number.
+    - `order` - unique order number.
     """
+    alias XtbClient.Messages.TradeTransactionStatus
+
+    @behaviour XtbClient.Message
 
     @type t :: %__MODULE__{
             order: integer()
@@ -37,7 +41,18 @@ defmodule XtbClient.Messages.TradeTransactionStatus do
         order: order
       }
     end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "tradeTransactionStatus"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: TradeTransactionStatus.new(data)
   end
+
+  alias XtbClient.Messages.TransactionStatus
 
   @type t :: %__MODULE__{
           ask: float(),
