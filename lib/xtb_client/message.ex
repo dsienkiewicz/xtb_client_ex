@@ -1,8 +1,8 @@
 defmodule XtbClient.Message do
   @moduledoc """
-  Module for handling messages from XTB Api.
+  Module for handling synchronous messages with XTB Api.
 
-  This module provides functions for decoding messages from the XTB API.
+  This module provides functions for parsing messages from the XTB API.
   """
 
   @doc "Returns a string representation of the operation."

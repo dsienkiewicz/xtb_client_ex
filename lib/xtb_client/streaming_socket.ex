@@ -16,14 +16,17 @@ defmodule XtbClient.StreamingSocket do
   """
   use WebSockex
 
-  alias XtbClient.{AccountType, StreamingMessage}
+  alias XtbClient.AccountType
   alias XtbClient.Error
   alias XtbClient.Messages
   alias XtbClient.RateLimit
+  alias XtbClient.StreamingMessage
+
+  import XtbClient.Messages
 
   require Logger
 
-  @ping_interval 30 * 1000
+  @ping_interval :timer.seconds(30)
 
   @type metadata :: map()
 
@@ -47,13 +50,20 @@ defmodule XtbClient.StreamingSocket do
     end
 
     def parse(opts) do
-      type = AccountType.format_streaming(get_in(opts, [:type]))
+      url = get_in(opts, [:url]) || raise "Missing url in config"
+      type = get_in(opts, [:type]) || raise "Missing type in config"
+      type = AccountType.format_streaming(type)
+
+      stream_session_id =
+        get_in(opts, [:stream_session_id]) || raise "Missing stream_session_id in config"
+
+      module = get_in(opts, [:module]) || raise "Missing module in config"
 
       %{
-        url: get_in(opts, [:url]) |> URI.merge(type) |> URI.to_string(),
+        url: url |> URI.merge(type) |> URI.to_string(),
         type: type,
-        stream_session_id: get_in(opts, [:stream_session_id]),
-        module: get_in(opts, [:module])
+        stream_session_id: stream_session_id,
+        module: module
       }
     end
   end
@@ -79,13 +89,13 @@ defmodule XtbClient.StreamingSocket do
   Callback invoked when message from WebSocket is received.
 
   ## Params:
-  - `token` - unique token of the subscribed method & params,
+  - `hash` - unique hash of the subscribed method & params,
   - `message` - struct with response data
   - `metadata` - map with additional context data attached to subscription
 
   """
   @callback handle_message(
-              token :: StreamingMessage.t(),
+              hash :: String.t(),
               message :: struct(),
               metadata :: metadata()
             ) :: :ok
@@ -105,8 +115,15 @@ defmodule XtbClient.StreamingSocket do
     quote location: :keep do
       @behaviour XtbClient.StreamingSocket
 
+      def child_spec(opts) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]}
+        }
+      end
+
       @doc false
-      def handle_message(token, message, _metadata) do
+      def handle_message(_hash, message, _metadata) do
         raise "No handle_message/2 clause in #{__MODULE__} provided for #{inspect(message)}"
       end
 
@@ -146,15 +163,25 @@ defmodule XtbClient.StreamingSocket do
         _conn,
         %State{stream_session_id: stream_session_id} = state
       ) do
-    ping_command = encode_streaming_command({"ping", nil}, stream_session_id)
+    ping_command = encode_streaming_command("ping", nil, stream_session_id)
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
-    schedule_work(ping_message, 1)
+    Process.send_after(self(), ping_message, 1)
 
     {:ok, state}
   end
 
-  defp schedule_work(message, interval) do
-    Process.send_after(self(), message, interval)
+  @doc """
+  Handles the subscribing to the API messages.
+  """
+  @spec subscribe(GenServer.server(), Messages.streaming_message()) ::
+          {:ok, String.t()} | {:error, term()}
+  def subscribe(server, %struct{} = command) when is_streaming_message(struct) do
+    with hash <- Messages.hash(command),
+         :ok <- WebSockex.cast(server, {:subscribe, command}) do
+      {:ok, hash}
+    else
+      err -> {:error, err}
+    end
   end
 
   @doc """
@@ -188,42 +215,42 @@ defmodule XtbClient.StreamingSocket do
     end
   end
 
-  @doc """
-  Subscribes for API chart candles.
-  The interval of every candle is 1 minute. A new candle arrives every minute.
+  # @doc """
+  # Subscribes for API chart candles.
+  # The interval of every candle is 1 minute. A new candle arrives every minute.
 
-  Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
-  When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
-  """
-  @spec subscribe_get_candles(
-          GenServer.server(),
-          XtbClient.Messages.Candles.Query.t(),
-          metadata :: metadata()
-        ) :: {:ok, StreamingMessage.t()} | {:error, term()}
-  def subscribe_get_candles(socket, %Messages.Candles.Query{} = params, metadata \\ %{}) do
-    with message <- StreamingMessage.new("getCandles", "candle", metadata, params),
-         :ok <- WebSockex.cast(socket, {:subscribe, message}) do
-      {:ok, message}
-    else
-      err -> {:error, err}
-    end
-  end
+  # Operation is asynchronous, so the immediate response is an `{:ok, token}` tuple, where token is a unique hash of subscribed operation.
+  # When the new data are available, the `XtbClient.Messages.Candle` struct is sent via `handle_message/2` callback.
+  # """
+  # @spec subscribe_get_candles(
+  #         GenServer.server(),
+  #         XtbClient.Messages.Candles.Query.t(),
+  #         metadata :: metadata()
+  #       ) :: {:ok, StreamingMessage.t()} | {:error, term()}
+  # def subscribe_get_candles(socket, %Messages.Candles.Query{} = params, metadata \\ %{}) do
+  #   with message <- StreamingMessage.new("getCandles", "candle", metadata, params),
+  #        :ok <- WebSockex.cast(socket, {:subscribe, message}) do
+  #     {:ok, message}
+  #   else
+  #     err -> {:error, err}
+  #   end
+  # end
 
-  @doc """
-  Unsubscribes from stream of chart candles.
-  """
-  @spec unsubscribe_get_candles(
-          GenServer.server(),
-          XtbClient.Messages.Candles.Query.t()
-        ) :: {:ok, StreamingMessage.t()} | {:error, term()}
-  def unsubscribe_get_candles(socket, %Messages.Candles.Query{} = params) do
-    with message <- StreamingMessage.new("stopCandles", "candle", %{}, params),
-         :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
-      {:ok, message}
-    else
-      err -> {:error, err}
-    end
-  end
+  # @doc """
+  # Unsubscribes from stream of chart candles.
+  # """
+  # @spec unsubscribe_get_candles(
+  #         GenServer.server(),
+  #         XtbClient.Messages.Candles.Query.t()
+  #       ) :: {:ok, StreamingMessage.t()} | {:error, term()}
+  # def unsubscribe_get_candles(socket, %Messages.Candles.Query{} = params) do
+  #   with message <- StreamingMessage.new("stopCandles", "candle", %{}, params),
+  #        :ok <- WebSockex.cast(socket, {:unsubscribe, message}) do
+  #     {:ok, message}
+  #   else
+  #     err -> {:error, err}
+  #   end
+  # end
 
   @doc """
   Subscribes for 'keep alive' messages.
@@ -427,11 +454,7 @@ defmodule XtbClient.StreamingSocket do
   def handle_cast(
         {
           :subscribe,
-          %StreamingMessage{
-            method: method,
-            response_method: response_method,
-            params: params
-          } = message
+          command
         },
         %State{
           subscriptions: subscriptions,
@@ -441,15 +464,20 @@ defmodule XtbClient.StreamingSocket do
       ) do
     rate_limit = RateLimit.check_rate(rate_limit)
 
+    hash = Messages.hash(command)
+
     subscriptions =
       Map.put(
         subscriptions,
-        response_method,
-        message
+        hash,
+        command
       )
 
-    encoded_message = encode_streaming_command({method, params}, session_id)
     state = %{state | subscriptions: subscriptions, rate_limit: rate_limit}
+
+    operation = Messages.operation(command)
+    params = Messages.encode(command)
+    encoded_message = encode_streaming_command(operation, params, session_id)
 
     {:reply, {:text, encoded_message}, state}
   end
@@ -458,11 +486,7 @@ defmodule XtbClient.StreamingSocket do
   def handle_cast(
         {
           :unsubscribe,
-          %StreamingMessage{
-            method: method,
-            response_method: response_method,
-            params: params
-          }
+          command
         },
         %State{
           subscriptions: subscriptions,
@@ -472,37 +496,28 @@ defmodule XtbClient.StreamingSocket do
       ) do
     rate_limit = RateLimit.check_rate(rate_limit)
 
+    hash = Messages.hash(command)
+
     subscriptions =
       Map.delete(
         subscriptions,
-        response_method
+        hash
       )
-
-    encoded_message =
-      encode_streaming_command({method, params}, session_id)
 
     state = %{state | subscriptions: subscriptions, rate_limit: rate_limit}
 
+    operation = Messages.operation(command)
+    params = Messages.encode(command)
+    encoded_message = encode_streaming_command(operation, params, session_id)
+
     {:reply, {:text, encoded_message}, state}
-  end
-
-  defp encode_streaming_command({method, params}, streaming_session_id)
-       when is_binary(method) and is_binary(streaming_session_id) do
-    params = if params == nil, do: %{}, else: Map.from_struct(params)
-
-    %{
-      command: method,
-      streamSessionId: streaming_session_id
-    }
-    |> Map.merge(params)
-    |> Jason.encode!()
   end
 
   @impl WebSockex
   def handle_frame({:text, msg}, %State{module: module} = state) do
     with {:ok, resp} <- Jason.decode(msg),
-         {:ok, {token, message, metadata}} <- handle_response(resp, state),
-         :ok <- module.handle_message(token, message, metadata) do
+         {:ok, {hash, message, metadata}} <- handle_response(resp, state),
+         :ok <- module.handle_message(hash, message, metadata) do
       {:ok, state}
     else
       {:ok, _} = result ->
@@ -514,6 +529,26 @@ defmodule XtbClient.StreamingSocket do
     end
   end
 
+  @impl WebSockex
+  def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
+    Process.send_after(self(), message, interval)
+
+    {:reply, frame, state}
+  end
+
+  defp encode_streaming_command(method, params, streaming_session_id)
+       when is_binary(method) and is_binary(streaming_session_id) do
+    params = if params == nil, do: %{}, else: Map.from_struct(params)
+
+    %{
+      command: method,
+      streamSessionId: streaming_session_id
+    }
+    |> Map.merge(params)
+    |> Map.filter(fn {_, value} -> value != nil end)
+    |> Jason.encode!()
+  end
+
   defp handle_response(
          %{"command" => response_method, "data" => data},
          %State{subscriptions: subscriptions} = _state
@@ -521,7 +556,7 @@ defmodule XtbClient.StreamingSocket do
     with token <- Map.get(subscriptions, response_method),
          method <- StreamingMessage.get_method_name(token),
          metadata <- StreamingMessage.get_metadata(token),
-         result <- Messages.decode_message(method, data) do
+         result <- Messages.decode(method, data) do
       {:ok, {token, result, metadata}}
     end
   end
@@ -538,12 +573,5 @@ defmodule XtbClient.StreamingSocket do
     Logger.error("Socket received error: #{inspect(error)}")
 
     {:error, error}
-  end
-
-  @impl WebSockex
-  def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
-    schedule_work(message, interval)
-
-    {:reply, frame, state}
   end
 end

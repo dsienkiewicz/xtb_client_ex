@@ -42,14 +42,21 @@ defmodule XtbClient.MainSocket do
     end
 
     def parse(opts) do
-      type = AccountType.format_main(get_in(opts, [:type]))
+      url = get_in(opts, [:url]) || raise "Missing url in config"
+      type = get_in(opts, [:type]) || raise "Missing type in config"
+
+      type = AccountType.format_main(type)
+
+      user = get_in(opts, [:user]) || raise "Missing user in config"
+      password = get_in(opts, [:password]) || raise "Missing password in config"
+      app_name = get_in(opts, [:app_name]) || raise "Missing app_name in config"
 
       %{
-        url: get_in(opts, [:url]) |> URI.merge(type) |> URI.to_string(),
+        url: url |> URI.merge(type) |> URI.to_string(),
         type: type,
-        user: get_in(opts, [:user]),
-        password: get_in(opts, [:password]),
-        app_name: get_in(opts, [:app_name])
+        user: user,
+        password: password,
+        app_name: app_name
       }
     end
   end
@@ -102,15 +109,16 @@ defmodule XtbClient.MainSocket do
     %{type: type, url: url, user: user, password: password, app_name: app_name} =
       Config.parse(conn_opts)
 
-    state = %State{
-      url: url,
-      account_type: type,
-      user: user,
-      password: password,
-      app_name: app_name,
-      queries: %{},
-      rate_limit: RateLimit.new(200)
-    }
+    state =
+      %State{
+        url: url,
+        account_type: type,
+        user: user,
+        password: password,
+        app_name: app_name,
+        queries: %{},
+        rate_limit: RateLimit.new(200)
+      }
 
     case WebSockex.start_link(url, __MODULE__, state, opts) do
       {:ok, pid} = result ->

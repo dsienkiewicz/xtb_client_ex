@@ -7,6 +7,7 @@ defmodule XtbClient.Messages do
     BalanceInfo,
     CalendarInfos,
     Candle,
+    Candles,
     ChartLast,
     ChartRange,
     CommissionDefinition,
@@ -78,23 +79,50 @@ defmodule XtbClient.Messages do
           | UserInfo.Query.t()
           | Version.Query.t()
 
+  @type streaming_message ::
+          Candles.SubscribeCandlesCommand.t()
+          | TradeStatus.SubscribeTradeStatusCommand.t()
+          | TradeStatus.UnsubscribeTradeStatusCommand.t()
+
+  @streaming_messages [
+    Candles.SubscribeCandlesCommand,
+    TradeStatus.SubscribeTradeStatusCommand,
+    TradeStatus.UnsubscribeTradeStatusCommand
+  ]
+
   @doc "Guards that module is a sync Message, query or command."
   defguard is_sync_message(struct) when struct in @sync_messages
 
+  @doc "Guards that module is a streaming Message."
+  defguard is_streaming_message(struct) when struct in @streaming_messages
+
   @doc "Returns the operation key of the Message struct."
-  @spec operation(sync_message()) :: String.t()
-  def operation(%struct{} = query) when is_sync_message(struct),
-    do: struct.operation(query)
+  @spec operation(sync_message() | streaming_message()) :: String.t()
+  def operation(%struct{} = query)
+      when is_sync_message(struct) or is_streaming_message(struct),
+      do: struct.operation(query)
 
   @doc "Encodes the message with `struct` module."
-  @spec encode(sync_message()) :: map()
-  def encode(%struct{} = data) when is_sync_message(struct),
-    do: struct.encode(data)
+  @spec encode(sync_message() | streaming_message()) :: map()
+  def encode(%struct{} = data)
+      when is_sync_message(struct) or is_streaming_message(struct),
+      do: struct.encode(data)
 
   @doc "Decodes the message with `struct` module."
   @spec decode(module(), map()) :: struct()
-  def decode(struct, data) when is_sync_message(struct) and not is_nil(data),
-    do: struct.decode(data)
+  def decode(struct, data)
+      when (is_sync_message(struct) or is_streaming_message(struct)) and not is_nil(data),
+      do: struct.decode(data)
+
+  @doc "Calculates a unique hash for the message, which must be the same for related subscribe and unsubscribe messages."
+  @spec hash(streaming_message()) :: String.t()
+  def hash(%struct{} = data) when is_streaming_message(struct),
+    do: struct.hash(data)
+
+  @doc "Returns metadata (provided by client) of a streaming Message."
+  @spec fetch_metadata(streaming_message()) :: map() | nil
+  def fetch_metadata(%struct{} = data) when is_streaming_message(struct),
+    do: struct.fetch_metadata(data)
 
   @doc "Some messages require post processing, eg. adding `symbol` to `Candle`."
   @spec post_process_response(sync_message(), struct()) :: struct()

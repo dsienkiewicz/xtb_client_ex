@@ -64,6 +64,12 @@ defmodule XtbClient.Connection do
     GenServer.call(server, {:sync_call, query})
   end
 
+  @spec subscribe(GenServer.server(), Messages.streaming_message()) ::
+          {:ok, String.t()} | {:error, term()}
+  def subscribe(server, %struct{} = command) when is_streaming_message(struct) do
+    GenServer.call(server, {:subscribe, command})
+  end
+
   @impl true
   def handle_call(
         {:sync_call, query},
@@ -71,6 +77,11 @@ defmodule XtbClient.Connection do
         %State{mpid: mpid} = state
       ) do
     result = MainSocket.handle_query(mpid, query)
+    {:reply, result, state}
+  end
+
+  def handle_call({:subscribe, command}, _from, %State{spid: spid} = state) do
+    result = StreamingSocket.subscribe(spid, command)
     {:reply, result, state}
   end
 
