@@ -9,6 +9,34 @@ defmodule XtbClient.Messages.CalendarInfos do
   - `getCalendar`
   """
 
+  defmodule Query do
+    @moduledoc """
+    Returns calendar with market events.
+    """
+    alias XtbClient.Messages.CalendarInfos
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{}
+
+    @enforce_keys []
+    @derive Jason.Encoder
+    defstruct []
+
+    def new do
+      %__MODULE__{}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getCalendar"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: CalendarInfos.new(data)
+  end
+
   alias XtbClient.Messages.CalendarInfo
 
   @type t :: %__MODULE__{

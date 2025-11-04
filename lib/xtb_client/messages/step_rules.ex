@@ -11,6 +11,34 @@ defmodule XtbClient.Messages.StepRules do
 
   alias XtbClient.Messages.StepRule
 
+  defmodule Query do
+    @moduledoc """
+    Returns a list of step rules for DMAs.
+    """
+    alias XtbClient.Messages.StepRules
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{}
+
+    @enforce_keys []
+    @derive Jason.Encoder
+    defstruct []
+
+    def new do
+      %__MODULE__{}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getStepRules"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: StepRules.new(data)
+  end
+
   @type t :: %__MODULE__{
           data: [StepRule.t()]
         }

@@ -56,15 +56,16 @@ defmodule XtbClient.Messages.SymbolInfo do
   - `getSymbol`
   """
 
-  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
-
   defmodule Query do
     @moduledoc """
-    Info about the query for symbol info.
+    Returns information about symbol available for the user.
 
     ## Parameters
-    - `symbol` symbol name.
+    - `symbol` - symbol name.
     """
+    alias XtbClient.Messages.SymbolInfo
+
+    @behaviour XtbClient.Message
 
     @type t :: %__MODULE__{
             symbol: String.t()
@@ -80,7 +81,18 @@ defmodule XtbClient.Messages.SymbolInfo do
         symbol: symbol
       }
     end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getSymbol"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: SymbolInfo.new(data)
   end
+
+  alias XtbClient.Messages.{MarginMode, ProfitMode, QuoteId}
 
   @type t :: %__MODULE__{
           ask: float(),

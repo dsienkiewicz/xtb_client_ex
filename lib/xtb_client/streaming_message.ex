@@ -1,7 +1,26 @@
 defmodule XtbClient.StreamingMessage do
   @moduledoc """
-  Helper module for encoding and decoding streaming messages.
+  Module for handling streaming messages with XTB Api.
+
+  This module provides functions for parsing messages from the XTB API.
   """
+
+  @doc "Returns a string representation of the subscribe operation."
+  @callback operation(struct :: struct()) :: String.t()
+
+  @doc "Returns a JSON path to get the response object."
+  @callback response_path(struct :: struct()) :: String.t()
+
+  @doc "Encodes the message."
+  @callback encode(struct :: struct()) :: map()
+
+  @doc "Decodes the message."
+  @callback decode(data :: term()) :: struct()
+
+  @doc "Calculates a unique hash for the message, which must be the same for related subscribe and unsubscribe messages."
+  @callback hash(struct :: struct()) :: String.t()
+
+  @callback fetch_metadata(struct :: struct()) :: map() | nil
 
   @type t :: %__MODULE__{
           method: String.t(),

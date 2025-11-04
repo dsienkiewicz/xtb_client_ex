@@ -9,15 +9,16 @@ defmodule XtbClient.Messages.TradingHours do
   - `getTradingHours`
   """
 
-  alias XtbClient.Messages.TradingHour
-
   defmodule Query do
     @moduledoc """
-    Info about the query for trading hours.
+    Returns quotes and trading times.
 
     ## Parameters
-    - `symbols` array of symbol names.
+    - `symbols` - array of symbol names.
     """
+    alias XtbClient.Messages.TradingHours
+
+    @behaviour XtbClient.Message
 
     @type t :: %__MODULE__{
             symbols: [String.t()]
@@ -32,7 +33,18 @@ defmodule XtbClient.Messages.TradingHours do
         symbols: symbols
       }
     end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getTradingHours"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: TradingHours.new(data)
   end
+
+  alias XtbClient.Messages.TradingHour
 
   @type t :: %__MODULE__{
           data: [TradingHour.t()]

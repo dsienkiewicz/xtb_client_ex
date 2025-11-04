@@ -42,7 +42,7 @@ defmodule XtbClient.Messages.TradeInfo do
           close_price: float(),
           close_time: DateTime.t() | nil,
           closed: boolean(),
-          operation: integer(),
+          operation: Operation.t(),
           comment: String.t(),
           commission: float() | nil,
           custom_comment: String.t() | nil,

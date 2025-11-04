@@ -15,6 +15,34 @@ defmodule XtbClient.Messages.UserInfo do
   - `getCurrentUserData`
   """
 
+  defmodule Query do
+    @moduledoc """
+    Returns information about account currency and account leverage.
+    """
+    alias XtbClient.Messages.UserInfo
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{}
+
+    @enforce_keys []
+    @derive Jason.Encoder
+    defstruct []
+
+    def new do
+      %__MODULE__{}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getCurrentUserData"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.Message
+    def decode(data), do: UserInfo.new(data)
+  end
+
   @type t :: %__MODULE__{
           company_unit: integer(),
           currency: String.t(),

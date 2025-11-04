@@ -13,6 +13,74 @@ defmodule XtbClient.Messages.TradeStatus do
   - `getTradeStatus`
   """
 
+  defmodule SubscribeTradeStatusCommand do
+    @moduledoc """
+    Command for subscribing to trade status updates.
+    """
+    alias XtbClient.Messages.TradeStatus
+
+    @behaviour XtbClient.StreamingMessage
+
+    @type t :: %__MODULE__{
+            metadata: map() | nil
+          }
+
+    @derive {Jason.Encoder, except: [:metadata]}
+    defstruct metadata: nil
+
+    def new(metadata \\ nil), do: %__MODULE__{metadata: metadata}
+
+    @impl XtbClient.StreamingMessage
+    def operation(%__MODULE__{}), do: "getTradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def response_path(%__MODULE__{}), do: "tradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.StreamingMessage
+    def decode(data), do: TradeStatus.new(data)
+
+    @impl XtbClient.StreamingMessage
+    def hash(%__MODULE__{}), do: "tradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def fetch_metadata(%__MODULE__{} = data), do: data.metadata
+  end
+
+  defmodule UnsubscribeTradeStatusCommand do
+    @moduledoc """
+    Command for unsubscribing from trade status updates.
+    """
+    @behaviour XtbClient.StreamingMessage
+
+    @type t :: %__MODULE__{}
+
+    @derive Jason.Encoder
+    defstruct []
+
+    def new, do: %__MODULE__{}
+
+    @impl XtbClient.StreamingMessage
+    def operation(%__MODULE__{}), do: "stopTradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def response_path(%__MODULE__{}), do: "tradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def encode(%__MODULE__{} = data), do: data
+
+    @impl XtbClient.StreamingMessage
+    def decode(data), do: data
+
+    @impl XtbClient.StreamingMessage
+    def hash(%__MODULE__{}), do: "tradeStatus"
+
+    @impl XtbClient.StreamingMessage
+    def fetch_metadata(%__MODULE__{}), do: nil
+  end
+
   alias XtbClient.Messages.TransactionStatus
 
   @type t :: %__MODULE__{

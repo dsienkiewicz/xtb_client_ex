@@ -10,6 +10,37 @@ defmodule XtbClient.Messages.CommissionDefinition do
   - `getCommissionDef`
   """
 
+  defmodule Query do
+    @moduledoc """
+    Returns calculation of commission and rate of exchange.
+
+    The value is calculated as expected value and therefore might not be perfectly accurate.
+    """
+    alias XtbClient.Messages.CommissionDefinition
+    alias XtbClient.Messages.SymbolVolume
+
+    @behaviour XtbClient.Message
+
+    @type t :: %__MODULE__{symbol_volume: SymbolVolume.t()}
+
+    @enforce_keys [:symbol_volume]
+    @derive Jason.Encoder
+    defstruct symbol_volume: nil
+
+    def new(%SymbolVolume{} = symbol_volume) do
+      %__MODULE__{symbol_volume: symbol_volume}
+    end
+
+    @impl XtbClient.Message
+    def operation(%__MODULE__{}), do: "getCommissionDef"
+
+    @impl XtbClient.Message
+    def encode(%__MODULE__{} = data), do: data.symbol_volume
+
+    @impl XtbClient.Message
+    def decode(data), do: CommissionDefinition.new(data)
+  end
+
   @type t :: %__MODULE__{
           commission: float(),
           rate_of_exchange: float()
