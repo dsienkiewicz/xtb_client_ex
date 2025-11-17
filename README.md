@@ -6,7 +6,7 @@ Elixir client for the XTB trading platform.
 
 Library provides simple client written as `GenServer` intended to be started as a process to communicate with XTB server.
 
-As all regular OTP processes, the process for `XtbClient.Connection` could be supervised, registered locally or in distributed environment, monitored, traced, linked to other processes etc.
+As all regular OTP processes, the process for `XtbClient.MainSocket` could be supervised, registered locally or in distributed environment, monitored, traced, linked to other processes etc.
 
 ## Installation
 
@@ -23,18 +23,17 @@ end
 ## Usage
 Find more examples in the folder `examples/`.
 
-### Starting client connection
+### Starting client main socket
 ```elixir
 params = [
-  connection: %{
     app_name: "XtbClient",
     type: :demo,
-    url: "wss://ws.xtb.com",
+    url: "wss://ws.xapi.pro",
     user: username,
-    password: password}
+    password: password
   ]
 
-{:ok, pid} = XtbClient.Connection.start_link(params)
+{:ok, pid} = XtbClient.MainSocket.start_link(params)
 ```
 
 ### Subscribe to tick prices
@@ -42,19 +41,19 @@ params = [
 Code.require_file("./examples/stream_listener.ex")
 
 params = [
-  connection: %{
     app_name: "XtbClient",
     type: :demo,
-    url: "wss://ws.xtb.com",
+    url: "wss://ws.xapi.pro",
     user: username,
-    password: password}
+    password: password
   ]
-{:ok, cpid} = XtbClient.Connection.start_link(params)
+
+{:ok, cpid} = XtbClient.MainSocket.start_link(params)
 
 args = %{symbol: "LITECOIN"}
 query = XtbClient.Messages.Quotations.Query.new(args)
 {:ok, litecoin} = StreamListener.start_link(%{"name" => args.symbol})
-XtbClient.Connection.subscribe_get_tick_prices(cpid, litecoin, query)
+XtbClient.MainSocket.subscribe_get_tick_prices(cpid, litecoin, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.TickPrice{
@@ -96,19 +95,19 @@ Listener handle info: {:ok,
 Code.require_file("./examples/stream_listener.ex")
 
 params = [
-  connection: %{
     app_name: "XtbClient",
     type: :demo,
-    url: "wss://ws.xtb.com",
+    url: "wss://ws.xapi.pro",
     user: username,
-    password: password}
+    password: password
   ]
-{:ok, cpid} = XtbClient.Connection.start_link(params)
+  
+{:ok, cpid} = XtbClient.MainSocket.start_link(params)
 
 args = "LITECOIN"
 query = XtbClient.Messages.Candles.Query.new(args)
 {:ok, litecoin} = StreamListener.start_link(%{"name" => args})
-XtbClient.Connection.subscribe_get_candles(cpid, litecoin, query)
+XtbClient.MainSocket.subscribe_get_candles(cpid, litecoin, query)
 
 Listener handle info: {:ok,
  %XtbClient.Messages.Candle{
