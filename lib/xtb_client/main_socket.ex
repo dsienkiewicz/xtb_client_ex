@@ -110,27 +110,7 @@ defmodule XtbClient.MainSocket do
       rate_limit: RateLimit.new(200)
     }
 
-    case WebSockex.start_link(url, __MODULE__, state, opts) do
-      {:ok, pid} = result ->
-        _ = poll_stream_session_id(pid)
-
-        result
-
-      other ->
-        other
-    end
-  end
-
-  defp poll_stream_session_id(server) do
-    case stream_session_id(server) do
-      {:ok, nil} ->
-        Process.sleep(10)
-
-        poll_stream_session_id(server)
-
-      {:ok, _session_id} = result ->
-        result
-    end
+    WebSockex.start_link(url, __MODULE__, state, opts)
   end
 
   @impl WebSockex
@@ -151,6 +131,8 @@ defmodule XtbClient.MainSocket do
     ping_message = {:ping, {:text, ping_command}, @ping_interval}
     schedule_work(ping_message, 1)
 
+    WebSockex.cast(self(), :poll_stream_session_id)
+
     {:ok, state}
   end
 
@@ -158,10 +140,6 @@ defmodule XtbClient.MainSocket do
   def handle_disconnect(_connection_status_map, state) do
     Logger.warning("Socket reconnecting")
     {:reconnect, state}
-  end
-
-  defp schedule_work(message, interval) do
-    Process.send_after(self(), message, interval)
   end
 
   @doc """
@@ -500,11 +478,18 @@ defmodule XtbClient.MainSocket do
   end
 
   @impl WebSockex
+  def handle_cast(:poll_stream_session_id, state) do
+    schedule_work({:poll_stream_session_id, [attempts: 10, delay: 100]}, 100)
+
+    {:ok, state}
+  end
+
+  @impl WebSockex
   def handle_cast(
         {:stream_session_id, {caller, ref}},
         %State{stream_session_id: result} = state
       ) do
-    GenServer.cast(caller, {:stream_session_id_reply, ref, result})
+    send(caller, {:"$gen_cast", {:stream_session_id_reply, ref, result}})
 
     {:ok, state}
   end
@@ -533,21 +518,11 @@ defmodule XtbClient.MainSocket do
     {:reply, frame, state}
   end
 
-  defp encode_command(method, params \\ nil, ref \\ nil) when is_binary(method) do
-    %{
-      command: method,
-      arguments: params,
-      customTag: ref
-    }
-    |> Map.filter(fn {_, value} -> value != nil end)
-    |> Jason.encode!()
-  end
-
   @impl WebSockex
   def handle_frame({:text, msg}, state) do
     with {:ok, resp} <- Jason.decode(msg),
-         {response, caller, state} <- handle_response(resp, state),
-         :ok <- GenServer.cast(caller, response) do
+         {response, caller, state} <- handle_response(resp, state) do
+      send(caller, {:"$gen_cast", response})
       {:ok, state}
     else
       {:ok, _} = result ->
@@ -557,6 +532,54 @@ defmodule XtbClient.MainSocket do
         Logger.warning("Socket received unknown message: #{inspect(other)}")
         {:ok, state}
     end
+  end
+
+  @impl WebSockex
+  def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
+    schedule_work(message, interval)
+
+    {:reply, frame, state}
+  end
+
+  @impl WebSockex
+  def handle_info({:poll_stream_session_id, opts}, %State{stream_session_id: session_id} = state) do
+    attempts = Keyword.get(opts, :attempts, 10)
+    delay = Keyword.get(opts, :delay, 100)
+
+    cond do
+      attempts <= 0 ->
+        Logger.warning("Max attempts reached, stream session ID not available")
+        {:ok, state}
+
+      session_id != nil ->
+        Logger.info("Stream session ID obtained: #{session_id}")
+        {:ok, state}
+
+      true ->
+        Logger.info("No stream session ID yet, polling again... (#{attempts} attempts remaining)")
+        schedule_work({:poll_stream_session_id, [attempts: attempts - 1, delay: delay]}, delay)
+        {:ok, state}
+    end
+  end
+
+  @impl WebSockex
+  def handle_info(msg, state) do
+    Logger.warning("Received unexpected message: #{inspect(msg)}")
+    {:ok, state}
+  end
+
+  defp schedule_work(message, interval) do
+    Process.send_after(self(), message, interval)
+  end
+
+  defp encode_command(method, params \\ nil, ref \\ nil) when is_binary(method) do
+    %{
+      command: method,
+      arguments: params,
+      customTag: ref
+    }
+    |> Map.filter(fn {_, value} -> value != nil end)
+    |> Jason.encode!()
   end
 
   defp handle_response(
@@ -593,10 +616,12 @@ defmodule XtbClient.MainSocket do
     {{:error, ref, error}, caller, state}
   end
 
-  @impl WebSockex
-  def handle_info({:ping, {:text, _command} = frame, interval} = message, state) do
-    schedule_work(message, interval)
+  defp handle_response(%{"status" => false, "errorCode" => code} = response, state) do
+    error_msg = Map.get(response, "errorDescr", "No error description provided")
+    error = %Error{code: code, message: error_msg}
 
-    {:reply, frame, state}
+    Logger.error("Socket received unknown error (likely login/ping error): #{inspect(error)}")
+
+    {:ok, state}
   end
 end
